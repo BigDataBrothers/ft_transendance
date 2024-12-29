@@ -1,17 +1,49 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}Home{% endblock %}
 {% block content %}
 
-{% if user.is_authenticated %}
-<h2>Hi {{ user.username }}!</h2>
-<p><a href="{% url 'password_change' %}">Password Change</a></p>
-<form action="{% url 'logout' %}" method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-danger">Log Out</button>
-</form>
-{% else %}
-<p>You are not logged in.</p>
-<a href="{% url 'login' %}" class="btn btn-primary">Log In</a>
-{% endif %}
+    <div class="user-actions">
+        {% if user.is_authenticated %}
+
+        <div class="profile-section">
+            <div class="profile-header d-flex align-items-center mb-4">
+                <img src="{% static 'images/avatar.jpg' %}" alt="Avatar" class="profile-avatar">
+                <div class="profile-info">
+                    <h1>{{ user.username }}</h1>
+                    <p>Level
+                        {% if user.level %}
+                            <span class="level-badge">{{ user.level }}</span>
+                        {% else %}
+                            <span class="level-badge">0</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        
+            <div class="progress mb-4">
+                <div class="progress-bar" role="progressbar" style="width: 15%" aria-valuenow="15" aria-valuemin="0" aria-valuemax="100">
+                    15%
+                </div>
+            </div>
+
+        <div class="authenticated-user">
+            <h2>Hi {{ user.username }}!</h2>
+            <p><a href="{% url 'password_change' %}">Password Change</a></p>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-center">
+                <button type="submit" class="btn btn-custom-logout">Log Out</button>
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="unauthenticated-user d-flex flex-column justify-content-center">
+            <p>You are not logged in.</p>
+            <a href="{% url 'login' %}" class="btn btn-primary ">Log In</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
 {% endblock %}

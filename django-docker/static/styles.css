@@ -1,0 +1,428 @@
+/* styles.css */
+
+/* Font face for custom font */
+@font-face {
+    font-family: 'Press Start 2P';
+    src: url('{% static "fonts/PressStart2P.ttf" %}');
+}
+
+/* Root variables for colors */
+:root {
+    --bg-color: #262324; /* Background color */
+    --text-color: #fcfcec; /* Text color */
+    --accent-color: #fdd900; /* Accent color */
+    --highlight-color: #3a3a3a; /* Highlight color */
+    --button-bg: #2d2d2d; /* Button background color */
+}
+
+/* Global styles */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Press Start 2P', cursive;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.15),
+        rgba(0, 0, 0, 0.15) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 1000;
+}
+
+/* Navbar styles */
+.navbar {
+    background-color: var(--bg-color) !important;
+    border-bottom: 2px solid var(--accent-color);
+    padding: 1rem;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 1001;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar-brand {
+    color: var(--accent-color) !important;
+    font-size: 1.2em;
+}
+
+.nav-link {
+    color: var(--text-color) !important;
+    transition: all 0.3s ease;
+    font-size: 0.8em;
+    padding: 0.5rem 1rem !important;
+}
+
+.nav-link:hover, .nav-link:focus {
+    color: var(--accent-color) !important;
+    transform: scale(1.1);
+}
+
+.navbar-toggler {
+    border: 2px solid var(--accent-color);
+    padding: 0.5rem;
+}
+
+.navbar-toggler-icon {
+    background-image: none;
+    position: relative;
+}
+
+.navbar-toggler-icon::before {
+    content: '≡';
+    color: var(--accent-color);
+    font-size: 1.5em;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Container styles */
+.container {
+    max-width: 1200px;
+    padding: 2rem;
+    margin-top: 80px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+/* Button styles */
+.btn {
+    background-color: var(--button-bg);
+    color: var(--text-color);
+    border: none;
+    border-radius: 25px;
+    padding: 1rem 2rem;
+    margin: 0.5rem;
+    font-family: 'Press Start 2P';
+    text-transform: uppercase;
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn:hover, .btn:focus {
+    background-color: var(--highlight-color);
+    color: var(--accent-color);
+    transform: scale(1.1);
+    outline: none;
+}
+
+.btn:focus::before {
+    content: '>';
+    position: absolute;
+    left: -20px;
+    color: var(--accent-color);
+    animation: blink 0.8s infinite;
+}
+
+.btn-custom-logout {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+    border: none;
+    border-radius: 25px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+}
+
+.btn-custom-logout:hover, .btn-custom-logout:focus {
+    background-color: #c82333 !important;
+    color: #ffffff !important;
+    transform: scale(1.1);
+    outline: none;
+}
+
+/* Form control styles */
+.form-control {
+    background: var(--bg-color);
+    border: 1px solid var(--accent-color);
+    color: var(--text-color);
+    border-radius: 15px;
+    padding: 0.8rem;
+    font-family: 'Press Start 2P';
+    font-size: 0.8em;
+}
+
+/* Card styles */
+.card {
+    background: var(--bg-color);
+    border: 2px solid var(--accent-color);
+    border-radius: 15px;
+    padding: 1rem;
+}
+
+/* Modal styles */
+.modal-content {
+    background-color: var(--bg-color);
+    border: 2px solid var(--accent-color);
+}
+
+.modal-header, .modal-footer {
+    border-color: var(--accent-color);
+}
+
+/* Logout link styles */
+#logout-link {
+    color: #dc3545 !important;
+}
+
+#logout-link:hover {
+    color: #f8d7da !important;
+}
+
+/* Profile section styles */
+.profile-header {
+    background-color: var(--bg-color);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.profile-avatar {
+    border-radius: 50%;
+    width: 100px;
+    height: 100px;
+    margin-right: 20px;
+}
+
+.profile-info h1 {
+    margin: 0;
+    color: var(--accent-color);
+}
+
+.profile-info p {
+    margin: 5px 0;
+}
+
+.profile-section {
+    background-color: var(--button-bg);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 600px;
+}
+
+.profile-section h2 {
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 10px;
+    color: var(--accent-color);
+}
+
+.level-badge {
+    display: inline-block;
+    padding: 5px 10px;
+    background-color: var(--highlight-color);
+    color: var(--accent-color);
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+/* Progress bar styles */
+.progress {
+    background-color: var(--bg-color);
+    border: 2px solid var(--accent-color);
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.progress-bar {
+    background-color: var(--accent-color);
+    border-radius: 15px;
+    text-align: center;
+    color: var(--bg-color);
+    font-weight: bold;
+    transition: width 0.3s ease;
+}
+
+/* Login section styles */
+.login-section {
+    background-color: var(--button-bg);
+    padding: 2rem;
+    border-radius: 10px;
+    margin-top: 20px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.login-section h2 {
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.login-section form {
+    display: flex;
+    flex-direction: column;
+}
+
+.login-section label {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.login-section input {
+    background-color: var(--bg-color);
+    border: 1px solid var(--accent-color);
+    color: var(--text-color);
+    border-radius: 5px;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+}
+
+.login-section button {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 25px;
+    padding: 1rem 2rem;
+    font-family: 'Press Start 2P', cursive;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.login-section button:hover, .login-section button:focus {
+    background-color: var(--highlight-color);
+    color: var(--accent-color);
+    transform: scale(1.1);
+    outline: none;
+}
+
+.login-section p {
+    color: var(--text-color);
+    margin-top: 1rem;
+}
+
+.login-section a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.login-section a:hover {
+    color: var(--highlight-color);
+}
+
+/* Signup section styles */
+.signup-section {
+    background-color: var(--button-bg);
+    padding: 2rem;
+    border-radius: 10px;
+    margin-top: 20px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.signup-section h2 {
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.signup-section form {
+    display: flex;
+    flex-direction: column;
+}
+
+.signup-section label {
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+}
+
+.signup-section input {
+    background-color: var(--bg-color);
+    border: 1px solid var(--accent-color);
+    color: var(--text-color);
+    border-radius: 5px;
+    padding: 0.5rem;
+    margin-bottom: 1rem;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 1rem;
+}
+
+.signup-section button {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 25px;
+    padding: 1rem 2rem;
+    font-family: 'Press Start 2P', cursive;
+    text-transform: uppercase;
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.signup-section button:hover, .signup-section button:focus {
+    background-color: var(--highlight-color);
+    color: var(--accent-color);
+    transform: scale(1.1);
+    outline: none;
+}
+
+.signup-section p {
+    color: var(--text-color);
+    margin-top: 1rem;
+}
+
+.signup-section a {
+    color: var(--accent-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.signup-section a:hover {
+    color: var(--highlight-color);
+}
+
+/* Keyframes for blinking animation */
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Media queries for responsive design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+        margin-top: 60px;
+    }
+
+    .btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.7em;
+    }
+}
