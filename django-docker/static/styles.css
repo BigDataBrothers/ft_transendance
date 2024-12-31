@@ -408,6 +408,175 @@ body::after {
     color: var(--highlight-color);
 }
 
+    .profile-wrapper {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .profile-background {
+        background: var(--button-bg);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .profile-header {
+        background: linear-gradient(to right, #1b2838, #2a475e);
+        padding: 30px;
+        border-bottom: 2px solid var(--accent-color);
+    }
+
+    .profile-summary {
+        display: flex;
+        gap: 20px;
+    }
+
+    .avatar-section {
+        position: relative;
+    }
+
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+        border: 3px solid var(--accent-color);
+        border-radius: 5px;
+    }
+
+    .online-status {
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 5px 15px;
+        border-radius: 15px;
+        font-size: 0.8em;
+        background: #4CAF50;
+        color: white;
+    }
+
+    .profile-details {
+        flex-grow: 1;
+    }
+
+    .player-level {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-top: 10px;
+    }
+
+    .level-icon {
+        background: var(--accent-color);
+        color: var(--primary-bg);
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        font-weight: bold;
+    }
+
+    .level-progress {
+        flex-grow: 1;
+        max-width: 300px;
+    }
+
+    .profile-content {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
+        padding: 20px;
+    }
+
+    .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .profile-card {
+        background: var(--button-bg);
+        border-radius: 5px;
+        padding: 15px;
+    }
+
+    .profile-links {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .profile-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: var(--button-bg);
+        border: none;
+        color: var(--primary-text);
+        text-decoration: none;
+        border-radius: 5px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .profile-link.danger {
+        background: #dc3545;
+    }
+
+    .main-content {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .stats-showcase {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .stat-card {
+        background: var(--button-bg);
+        border-radius: 5px;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2em;
+        color: var(--accent-color);
+    }
+
+    .achievements {
+        background: var(--button-bg);
+        border-radius: 5px;
+        padding: 20px;
+    }
+
+    .achievement-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 15px;
+    }
+
+    .achievement {
+        background: var(--primary-bg);
+        padding: 15px;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .profile-content {
+            grid-template-columns: 1fr;
+        }
+    }
+
 /* Keyframes for blinking animation */
 @keyframes blink {
     0%, 100% { opacity: 1; }
