@@ -16,14 +16,13 @@
             font-family: 'Press Start 2P';
             src: url('{% static "fonts/PressStart2P.ttf" %}');
         }
-
+    
         /* Uncomment the following block to add borders to all elements for debugging */
-        
+    
         /* * {
             border: solid black 1px;
         } */
-       
-
+    
         :root {
             --primary-bg: #262324;
             --primary-text: #fcfcec;
@@ -31,7 +30,7 @@
             --highlight-color: #3a3a3a;
             --button-bg: #2d2d2d;
         }
-
+    
         body {
             background-color: var(--primary-bg);
             color: var(--primary-text);
@@ -43,7 +42,7 @@
             align-items: center;
             position: relative;
         }
-
+    
         body::after {
             content: '';
             position: fixed;
@@ -61,7 +60,7 @@
             pointer-events: none;
             z-index: 1000;
         }
-
+    
         .navbar {
             background-color: var(--primary-bg) !important;
             border-bottom: 2px solid var(--accent-color);
@@ -74,34 +73,34 @@
             justify-content: space-between;
             align-items: center;
         }
-
+    
         .navbar-brand {
             color: var(--accent-color) !important;
             font-size: 1.2em;
         }
-
+    
         .nav-link {
             color: var(--primary-text) !important;
             transition: all 0.3s ease;
             font-size: 0.8em;
             padding: 0.5rem 1rem !important;
         }
-
+    
         .nav-link:hover, .nav-link:focus {
             color: var(--accent-color) !important;
             transform: scale(1.1);
         }
-
+    
         .navbar-toggler {
             border: 2px solid var(--accent-color);
             padding: 0.5rem;
         }
-
+    
         .navbar-toggler-icon {
             background-image: none;
             position: relative;
         }
-
+    
         .navbar-toggler-icon::before {
             content: '≡';
             color: var(--accent-color);
@@ -111,7 +110,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
         }
-
+    
         .container {
             max-width: 1200px;
             padding: 2rem;
@@ -124,7 +123,7 @@
             justify-content: center;
             flex-grow: 1;
         }
-
+    
         .btn {
             background-color: var(--button-bg);
             color: var(--primary-text);
@@ -138,14 +137,14 @@
             transition: all 0.3s ease;
             position: relative;
         }
-
+    
         .btn:hover, .btn:focus {
             background-color: var(--highlight-color);
             color: var(--accent-color);
             transform: scale(1.1);
             outline: none;
         }
-
+    
         .btn:focus::before {
             content: '>';
             position: absolute;
@@ -153,7 +152,7 @@
             color: var(--accent-color);
             animation: blink 0.8s infinite;
         }
-
+    
         .btn-custom-logout {
             background-color: #dc3545 !important;
             color: #ffffff !important;
@@ -163,14 +162,14 @@
             font-size: 0.8em;
             transition: all 0.3s ease;
         }
-
+    
         .btn-custom-logout:hover, .btn-custom-logout:focus {
             background-color: #c82333 !important;
             color: #ffffff !important;
             transform: scale(1.1);
             outline: none;
         }
-
+    
         .form-control {
             background: var(--primary-bg);
             border: 1px solid var(--accent-color);
@@ -180,31 +179,31 @@
             font-family: 'Press Start 2P';
             font-size: 0.8em;
         }
-
+    
         .card {
             background: var(--primary-bg);
             border: 2px solid var(--accent-color);
             border-radius: 15px;
             padding: 1rem;
         }
-
+    
         .modal-content {
             background-color: var(--primary-bg);
             border: 2px solid var(--accent-color);
         }
-
+    
         .modal-header, .modal-footer {
             border-color: var(--accent-color);
         }
-
+    
         #logout-link {
             color: #dc3545 !important;
         }
-
+    
         #logout-link:hover {
             color: #f8d7da !important;
         }
-
+    
         .profile-header {
             background-color: var(--primary-bg);
             padding: 20px;
@@ -213,23 +212,23 @@
             display: flex;
             align-items: center;
         }
-
+    
         .profile-avatar {
             border-radius: 50%;
             width: 100px;
             height: 100px;
             margin-right: 20px;
         }
-
+    
         .profile-info h1 {
             margin: 0;
             color: var(--accent-color);
         }
-
+    
         .profile-info p {
             margin: 5px 0;
         }
-
+    
         .profile-section {
             background-color: var(--button-bg);
             padding: 20px;
@@ -238,13 +237,13 @@
             width: 100%;
             max-width: 600px;
         }
-
+    
         .profile-section h2 {
             border-bottom: 2px solid var(--accent-color);
             padding-bottom: 10px;
             color: var(--accent-color);
         }
-
+    
         .level-badge {
             display: inline-block;
             padding: 5px 10px;
@@ -253,7 +252,7 @@
             border-radius: 5px;
             font-weight: bold;
         }
-
+    
         .progress {
             background-color: var(--primary-bg);
             border: 2px solid var(--accent-color);
@@ -261,7 +260,7 @@
             overflow: hidden;
             margin-bottom: 20px;
         }
-
+    
         .progress-bar {
             background-color: var(--accent-color);
             border-radius: 15px;
@@ -270,7 +269,7 @@
             font-weight: bold;
             transition: width 0.3s ease;
         }
-
+    
         .login-section {
             background-color: var(--button-bg);
             padding: 2rem;
@@ -280,22 +279,22 @@
             width: 100%;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-
+    
         .login-section h2 {
             color: var(--accent-color);
             margin-bottom: 1rem;
         }
-
+    
         .login-section form {
             display: flex;
             flex-direction: column;
         }
-
+    
         .login-section label {
             color: var(--primary-text);
             margin-bottom: 0.5rem;
         }
-
+    
         .login-section input {
             background-color: var(--primary-bg);
             border: 1px solid var(--accent-color);
@@ -306,7 +305,7 @@
             font-family: 'Press Start 2P', cursive;
             font-size: 1rem;
         }
-
+    
         .login-section button {
             background-color: var(--primary-bg);
             color: var(--primary-text);
@@ -319,29 +318,29 @@
             transition: all 0.3s ease;
             margin-top: 1rem;
         }
-
+    
         .login-section button:hover, .login-section button:focus {
             background-color: var(--highlight-color);
             color: var(--accent-color);
             transform: scale(1.1);
             outline: none;
         }
-
+    
         .login-section p {
             color: var(--primary-text);
             margin-top: 1rem;
         }
-
+    
         .login-section a {
             color: var(--accent-color);
             text-decoration: none;
             transition: color 0.3s ease;
         }
-
+    
         .login-section a:hover {
             color: var(--highlight-color);
         }
-
+    
         .signup-section {
             background-color: var(--button-bg);
             padding: 2rem;
@@ -351,22 +350,22 @@
             width: 100%;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-
+    
         .signup-section h2 {
             color: var(--accent-color);
             margin-bottom: 1rem;
         }
-
+    
         .signup-section form {
             display: flex;
             flex-direction: column;
         }
-
+    
         .signup-section label {
             color: var(--primary-text);
             margin-bottom: 0.5rem;
         }
-
+    
         .signup-section input {
             background-color: var(--primary-bg);
             border: 1px solid var(--accent-color);
@@ -377,7 +376,7 @@
             font-family: 'Press Start 2P', cursive;
             font-size: 1rem;
         }
-
+    
         .signup-section button {
             background-color: var(--primary-bg);
             color: var(--primary-text);
@@ -390,29 +389,29 @@
             transition: all 0.3s ease;
             margin-top: 1rem;
         }
-
+    
         .signup-section button:hover, .signup-section button:focus {
             background-color: var(--highlight-color);
             color: var(--accent-color);
             transform: scale(1.1);
             outline: none;
         }
-
+    
         .signup-section p {
             color: var(--primary-text);
             margin-top: 1rem;
         }
-
+    
         .signup-section a {
             color: var(--accent-color);
             text-decoration: none;
             transition: color 0.3s ease;
         }
-
+    
         .signup-section a:hover {
             color: var(--highlight-color);
         }
-
+    
         .success-section {
             background-color: var(--button-bg);
             padding: 2rem;
@@ -423,52 +422,52 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             text-align: center;
         }
-
+    
         .success-section h2 {
             color: var(--accent-color);
             margin-bottom: 1rem;
         }
-
+    
         .success-section p {
             color: var(--primary-text);
             margin-top: 1rem;
         }
-
+    
         /*Profile*/
         .profile-wrapper {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-
+    
         .profile-background {
             background: var(--button-bg);
             border-radius: 8px;
             overflow: hidden;
         }
-
+    
         .profile-header {
             background: linear-gradient(to right, #1b2838, #2a475e);
             padding: 30px;
             border-bottom: 2px solid var(--accent-color);
         }
-
+    
         .profile-summary {
             display: flex;
             gap: 20px;
         }
-
+    
         .avatar-section {
             position: relative;
         }
-
+    
         .profile-avatar {
             width: 150px;
             height: 150px;
             border: 3px solid var(--accent-color);
             border-radius: 5px;
         }
-
+    
         .online-status {
             position: absolute;
             bottom: -10px;
@@ -480,18 +479,18 @@
             background: #4CAF50;
             color: white;
         }
-
+    
         .profile-details {
             flex-grow: 1;
         }
-
+    
         .player-level {
             display: flex;
             align-items: center;
             gap: 15px;
             margin-top: 10px;
         }
-
+    
         .level-icon {
             background: var(--accent-color);
             color: var(--primary-bg);
@@ -503,37 +502,37 @@
             border-radius: 5px;
             font-weight: bold;
         }
-
+    
         .level-progress {
             flex-grow: 1;
             max-width: 300px;
         }
-
+    
         .profile-content {
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 20px;
             padding: 20px;
         }
-
+    
         .sidebar {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
-
+    
         .profile-card {
             background: var(--button-bg);
             border-radius: 5px;
             padding: 15px;
         }
-
+    
         .profile-links {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
-
+    
         .profile-link {
             display: flex;
             align-items: center;
@@ -547,48 +546,52 @@
             cursor: pointer;
             width: 100%;
         }
-
+    
         .profile-link.danger {
             background: #dc3545;
         }
-
+    
+        .custom-change-password-btn {
+            background-color: #262324;
+        }
+    
         .main-content {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
-
+    
         .stats-showcase {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
         }
-
+    
         .stat-card {
             background: var(--button-bg);
             border-radius: 5px;
             padding: 20px;
             text-align: center;
         }
-
+    
         .stat-value {
             font-size: 2em;
             color: var(--accent-color);
         }
-
+    
         .achievements {
             background: var(--button-bg);
             border-radius: 5px;
             padding: 20px;
         }
-
+    
         .achievement-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 15px;
             margin-top: 15px;
         }
-
+    
         .achievement {
             background: var(--primary-bg);
             padding: 15px;
@@ -597,31 +600,66 @@
             align-items: center;
             gap: 10px;
         }
+    
+        .friends-section {
+            background: var(--button-bg);
+            border-radius: 5px;
+            padding: 20px;
+        }
 
+        .friends-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .friend {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .friend-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+        }
+
+        .friend-name {
+            font-size: 1.2em;
+            color: var(--primary-text);
+        }
+
+        .friends-count {
+            color: #fdd900; /* Couleur différente pour le nombre d'amis */
+            font-weight: bold;
+        }
+    
         @media (max-width: 768px) {
             .profile-content {
                 grid-template-columns: 1fr;
             }
         }
         /**/
-
+    
         @keyframes blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
-
+    
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
                 margin-top: 60px;
             }
-
+    
             .btn {
                 padding: 0.8rem 1.5rem;
                 font-size: 0.7em;
             }
         }
     </style>
+    
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">

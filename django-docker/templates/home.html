@@ -34,7 +34,7 @@
                     </div>
                 </div>
                 <div class="profile-links">
-                    <a href="{% url 'password_change' %}" class="profile-link">
+                    <a href="{% url 'password_change' %}" class="profile-link custom-change-password-btn">
                         <i class="fas fa-key"></i> Change Password
                     </a>
                     <form action="{% url 'logout' %}" method="post">
@@ -72,6 +72,24 @@
                         <div class="achievement">
                             <i class="fas fa-star"></i>
                             <span>Perfect Game</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="friends-section">
+                    <h3>Friends <span class="friends-count">3</span></h3>
+                    <div class="friends-list">
+                        <div class="friend">
+                            <img src="{% static 'images/UserBlackBgWhite.jpg' %}" alt="Friend 1" class="friend-avatar">
+                            <span class="friend-name">RedSnow</span>
+                        </div>
+                        <div class="friend">
+                            <img src="{% static 'images/UserYelloBgWhite.jpg' %}" alt="Friend 2" class="friend-avatar">
+                            <span class="friend-name">Bill</span>
+                        </div>
+                        <div class="friend">
+                            <img src="{% static 'images/avatar.jpg' %}" alt="Friend 3" class="friend-avatar">
+                            <span class="friend-name">BigDataBrother</span>
                         </div>
                     </div>
                 </div>
