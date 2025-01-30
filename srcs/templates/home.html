@@ -2,204 +2,31 @@
 {% load static %}
 {% block content %}
 <div class="container mt-4">
+    <h1>Welcome to Our Gaming Platform</h1>
+    <p>Explore the latest games, connect with friends, and track your progress.</p>
+
     {% if user.is_authenticated %}
-    <div class="profile-background">
-        <div class="profile-header">
-            <div class="profile-summary">
-                <div class="avatar-section">
-                    <div class="avatar-section">
-                        <img src="{% static 'images/avatar.jpg' %}" alt="Avatar" class="profile-avatar">
-                        <div class="online-status online">Online</div>
-                    </div>
-                </div>
-                <div class="profile-details">
-                    <h1>{{ user.username }}</h1>
-                    <div class="player-level">
-                        <span class="level-icon">{{ user.level|default:0 }}</span>
-                        <div class="level-progress">
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: 75%">75%</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="user-info">
+            <h2>Welcome, {{ user.username }}!</h2>
+            <p>You have played {{ user_profile.games_played }} games and achieved a win rate of {{ user_profile.win_rate }}%.</p>
+            <a href="{% url 'accounts:profile' %}" class="btn btn-primary">View Your Profile</a>
         </div>
-
-        <div class="profile-content">
-            <div class="sidebar">
-                <div class="profile-card">
-                    <div class="recent-activity">
-                        <h3>Recent Activity</h3>
-                        <p>Last played: Pong Classic</p>
-                        <p>Time played: 2.3 hrs</p>
-                    </div>
-                </div>
-                
-                <button id="customizeProfile" class="profile-link custom-change-password-btn" style="margin-top: 10px;">
-                    <i class="fas fa-palette"></i> Customize Profile Colors
-                </button>
-                
-                <div class="profile-links">
-                    <a href="{% url 'password_change' %}" class="profile-link custom-change-password-btn">
-                        <i class="fas fa-key"></i> Change Password
-                    </a>
-                    <form action="{% url 'logout' %}" method="post">
-                        {% csrf_token %}
-                        <button type="submit" class="profile-link danger">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <div class="main-content">
-                <div class="stats-showcase">
-                    <div class="stat-card">
-                        <h4>Games Played</h4>
-                        <span class="stat-value">23</span>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Win Rate</h4>
-                        <span class="stat-value">68%</span>
-                    </div>
-                    <div class="stat-card">
-                        <h4>Total Score</h4>
-                        <span class="stat-value">1,234</span>
-                    </div>
-                </div>
-
-                <div class="achievements">
-                    <h3>Recent Achievements</h3>
-                    <div class="achievement-grid">
-                        <div class="achievement">
-                            <i class="fas fa-trophy"></i>
-                            <span>First Win</span>
-                        </div>
-                        <div class="achievement">
-                            <i class="fas fa-star"></i>
-                            <span>Perfect Game</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- <div class="friends-section">
-                    <h3>Friends <span class="friends-count">{{ user.friends.count }}</span></h3>
-                    <div class="friends-list">
-                        {% for friend in user.friends.all %}
-                        <div class="friend">
-                            <img src="{{ friend.profile_picture.url }}" alt="{{ friend.username }}" class="friend-avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
-                            <span class="friend-name">{{ friend.username }}</span>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div> -->
-
-                <div class="friends-section">
-                    <h3>Friends <span class="friends-count">3</span></h3>
-                    <div class="friends-list">
-                        <div class="friend">
-                            <img src="{% static 'images/UserBlackBgWhite.jpg' %}" alt="Friend 1" class="friend-avatar">
-                            <span class="friend-name">RedSnow</span>
-                        </div>
-                        <div class="friend">
-                            <img src="{% static 'images/UserYelloBgWhite.jpg' %}" alt="Friend 2" class="friend-avatar">
-                            <span class="friend-name">Bill</span>
-                        </div>
-                        <div class="friend">
-                            <img src="{% static 'images/avatar.jpg' %}" alt="Friend 3" class="friend-avatar">
-                            <span class="friend-name">BigDataBrother</span>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal pour le color picker -->
-    <div id="colorPickerModal" class="color-picker-modal">
-        <div class="color-picker-container">
-            <h3 style="color: #fcfcec; margin-bottom: 15px;">Customize Profile Colors</h3>
-            
-            <div class="color-input-group">
-                <label style="color: #fcfcec">Start Color:</label>
-                <input type="color" id="startColor" class="color-input" value="#1b2838">
-            </div>
-            
-            <div class="color-input-group">
-                <label style="color: #fcfcec">End Color:</label>
-                <input type="color" id="endColor" class="color-input" value="#2a475e">
-            </div>
-
-            <div class="preview-gradient" id="gradientPreview"></div>
-
-            <div class="modal-buttons">
-                <button onclick="applyGradient()" class="profile-link custom-change-password-btn">
-                    Apply
-                </button>
-                <button onclick="closeColorPicker()" class="profile-link danger">
-                    Cancel
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Fonction pour ouvrir le color picker
-        document.getElementById('customizeProfile').addEventListener('click', () => {
-            document.getElementById('colorPickerModal').style.display = 'block';
-            updatePreview();
-        });
-
-        // Fonction pour fermer le color picker
-        function closeColorPicker() {
-            document.getElementById('colorPickerModal').style.display = 'none';
-        }
-
-        // Fonction pour mettre à jour l'aperçu
-        function updatePreview() {
-            const startColor = document.getElementById('startColor').value;
-            const endColor = document.getElementById('endColor').value;
-            const preview = document.getElementById('gradientPreview');
-            preview.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
-        }
-
-        // Mettre à jour l'aperçu quand les couleurs changent
-        document.getElementById('startColor').addEventListener('input', updatePreview);
-        document.getElementById('endColor').addEventListener('input', updatePreview);
-
-        // Fonction pour appliquer le gradient
-        function applyGradient() {
-            const startColor = document.getElementById('startColor').value;
-            const endColor = document.getElementById('endColor').value;
-            const profileHeader = document.querySelector('.profile-header');
-            profileHeader.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
-            closeColorPicker();
-
-            // Sauvegarder les préférences dans le localStorage
-            localStorage.setItem('profileGradientStart', startColor);
-            localStorage.setItem('profileGradientEnd', endColor);
-        }
-
-        // Charger les préférences sauvegardées au chargement de la page
-        window.addEventListener('load', () => {
-            const savedStartColor = localStorage.getItem('profileGradientStart');
-            const savedEndColor = localStorage.getItem('profileGradientEnd');
-            
-            if (savedStartColor && savedEndColor) {
-                document.getElementById('startColor').value = savedStartColor;
-                document.getElementById('endColor').value = savedEndColor;
-                document.querySelector('.profile-header').style.background = 
-                    `linear-gradient(to right, ${savedStartColor}, ${savedEndColor})`;
-            }
-        });
-    </script>
     {% else %}
-    <div class="login-prompt">
-        <h2>Please log in to view your profile</h2>
-        <a href="{% url 'login' %}" class="btn">Log In</a>
-    </div>
+        <div class="login-prompt">
+            <h2>Please log in to access all features</h2>
+            <a href="{% url 'login' %}" class="btn btn-primary">Log In</a>
+            <a href="{% url 'accounts:signup' %}" class="btn btn-secondary">Sign Up</a>
+        </div>
     {% endif %}
+
+    <div class="featured-games">
+        <h2>Featured Games</h2>
+        <!-- Add your featured games here -->
+    </div>
+
+    <div class="recent-activity">
+        <h2>Recent Activity</h2>
+        <!-- Add recent activity here -->
+    </div>
 </div>
 {% endblock %}
