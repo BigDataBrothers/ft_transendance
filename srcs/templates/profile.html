@@ -74,15 +74,14 @@
                 <div class="achievements">
                     <h3>Recent Achievements</h3>
                     <div class="achievement-grid">
+                        {% for achievement in user_profile.achievements.all %}
                         <div class="achievement">
-                            <i class="fas fa-trophy"></i>
-                            <span>First Win</span>
+                            <i class="{{ achievement.icon }}"></i>
+                            <span>{{ achievement.name }}</span>
                         </div>
-                        <div class="achievement">
-                            <i class="fas fa-star"></i>
-                            <span>Perfect Game</span>
-                        </div>
+                        {% endfor %}
                     </div>
+                    <a href="{% url 'accounts:add_achievement' %}" class="btn btn-primary">Add Achievement</a>
                 </div>
 
                 <div class="friends-section">
@@ -104,7 +103,7 @@
         </div>
     </div>
 
-    <!-- Modal pour le color picker -->
+    <!-- Modal for the color picker -->
     <div id="colorPickerModal" class="color-picker-modal">
         <div class="color-picker-container">
             <h3 style="color: #fcfcec; margin-bottom: 15px;">Customize Profile Colors</h3>
@@ -133,18 +132,18 @@
     </div>
 
     <script>
-        // Fonction pour ouvrir le color picker
+        // Function to open the color picker
         document.getElementById('customizeProfile').addEventListener('click', () => {
             document.getElementById('colorPickerModal').style.display = 'block';
             updatePreview();
         });
 
-        // Fonction pour fermer le color picker
+        // Function to close the color picker
         function closeColorPicker() {
             document.getElementById('colorPickerModal').style.display = 'none';
         }
 
-        // Fonction pour mettre à jour l'aperçu
+        // Function to update the preview
         function updatePreview() {
             const startColor = document.getElementById('startColor').value;
             const endColor = document.getElementById('endColor').value;
@@ -152,11 +151,11 @@
             preview.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
         }
 
-        // Mettre à jour l'aperçu quand les couleurs changent
+        // Update the preview when the colors change
         document.getElementById('startColor').addEventListener('input', updatePreview);
         document.getElementById('endColor').addEventListener('input', updatePreview);
 
-        // Fonction pour appliquer le gradient
+        // Function to apply the gradient
         function applyGradient() {
             const startColor = document.getElementById('startColor').value;
             const endColor = document.getElementById('endColor').value;
@@ -164,12 +163,12 @@
             profileHeader.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
             closeColorPicker();
 
-            // Sauvegarder les préférences dans le localStorage
+            // Save the preferences in localStorage
             localStorage.setItem('profileGradientStart', startColor);
             localStorage.setItem('profileGradientEnd', endColor);
         }
 
-        // Charger les préférences sauvegardées au chargement de la page
+        // Load the saved preferences on page load
         window.addEventListener('load', () => {
             const savedStartColor = localStorage.getItem('profileGradientStart');
             const savedEndColor = localStorage.getItem('profileGradientEnd');

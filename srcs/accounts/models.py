@@ -3,6 +3,13 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+class Achievement(models.Model):
+    name = models.CharField(max_length=100)
+    icon = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     level = models.IntegerField(default=0)
@@ -13,6 +20,7 @@ class Profile(models.Model):
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     last_played_game = models.CharField(max_length=100, blank=True, null=True)
     time_played = models.FloatField(default=0.0)
+    achievements = models.ManyToManyField(Achievement, related_name='profiles')
 
     def __str__(self):
         return self.user.username

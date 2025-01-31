@@ -10,7 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
-from pathlib import Path, os
+from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -22,7 +23,10 @@ print(f"TEMPLATES DIRS: {[BASE_DIR / 'templates']}")
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get('SECRET_KEY')
+# SECRET_KEY = os.environ.get('SECRET_KEY')
+SECRET_KEY = 'django-insecure-ge&!bzmr=3ows=fk$(m5o(iz1o*#$+$*81&ep99r!(1z=abbl^'
+FT_CLIENT_ID = 'u-s4t2ud-b855b6816874401e5044c60fa9f6f223acc039deaf9853f85d6a0a57679c7723'
+FT_CLIENT_SECRET = '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'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -40,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
+    'authentification'
 ]
 
 MIDDLEWARE = [
@@ -128,6 +133,9 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+MEDIA_URL = 'media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -138,3 +146,15 @@ LOGIN_REDIRECT_URL = "home"
 LOGOUT_REDIRECT_URL = "home"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
+
+AUTH_USER_MODEL = 'authentification.User'
+# URL de redirection vers l'autorisation 42
+AUTHORIZE_URL = 'https://api.intra.42.fr/oauth/authorize'
+TOKEN_URL = 'https://api.intra.42.fr/oauth/token'
+FT_REDIRECT_URI = 'http://localhost:8000/callback'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    # Ajoutez ici d'autres backends si nécessaire
+]
