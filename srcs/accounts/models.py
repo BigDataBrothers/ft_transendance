@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.conf import settings
 
 class Achievement(models.Model):
     name = models.CharField(max_length=100)
@@ -11,7 +12,7 @@ class Achievement(models.Model):
         return self.name
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     level = models.IntegerField(default=0)
     games_played = models.IntegerField(default=0)
     win_rate = models.FloatField(default=0.0)

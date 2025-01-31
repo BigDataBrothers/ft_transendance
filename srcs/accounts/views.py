@@ -18,11 +18,10 @@ class SignUpView(CreateView):
 
 @login_required
 def profile_view(request):
-    user_profile = get_object_or_404(Profile, user=request.user)
-    achievements = Achievement.objects.all()
+    # Plus besoin de get_object_or_404(Profile) puisque l'utilisateur est déjà dans request.user
+    user = request.user
     context = {
-        'user_profile': user_profile,
-        'achievements': achievements,
+        'user_profile': user,  # Utilisez directement l'utilisateur
     }
     return render(request, 'profile.html', context)
 

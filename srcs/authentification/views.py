@@ -165,7 +165,7 @@ def callback_view(request):
         # Login direct sans authentification par mot de passe
         login(request, user)
         print(f"Utilisateur {user.username} connecté avec succès")
-        return redirect('login')
+        return redirect('home')
 
     except Exception as e:
         print(f"Erreur générale: {e}")

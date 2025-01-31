@@ -7,8 +7,8 @@
         <div class="profile-header">
             <div class="profile-summary">
                 <div class="avatar-section">
-                    {% if user_profile.profile_picture %}
-                        <img src="{{ user_profile.profile_picture.url }}" alt="Avatar" class="profile-avatar">
+                    {% if user_profile.profile_photo %}
+                        <img src="{{ user_profile.profile_photo.url }}" alt="Avatar" class="profile-avatar">
                     {% else %}
                         <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="profile-avatar">
                     {% endif %}
