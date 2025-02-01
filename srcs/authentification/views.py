@@ -9,18 +9,6 @@ import requests
 import secrets
 from . import forms
 
-# class CustomLoginView(LoginView):
-#     template_name = 'authentification/login.html'
-
-#     def form_valid(self, form):
-#         response = super().form_valid(form)
-#         messages.success(self.request, 'You are successfully logged in.')
-#         return response
-
-#     def form_invalid(self, form):
-#         messages.error(self.request, 'Invalid credentials.')
-#         return self.render_to_response(self.get_context_data(form=form))
-
 def logout_user(request):
     logout(request)
     messages.success(request, 'You have been successfully logged out.')

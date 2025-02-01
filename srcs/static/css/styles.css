@@ -1,20 +1,18 @@
-/* @font-face {
-    font-family: 'Press Start 2P';
-    src: url('../fonts/PressStart2P.ttf') format('truetype');} */
-
-/* Uncomment the following block to add borders to all elements for debugging */
-
-/* * {
-    border: solid black 1px;
-} */
-
 :root {
+    --primary-bg: #171a21; /* Couleur de fond principale de Steam */
+    --primary-text: #c6d4df; /* Couleur de texte principale de Steam */
+    --accent-color: #66c0f4; /* Couleur d'accent bleue de Steam */
+    --highlight-color: #1b2838; /* Couleur de surbrillance */
+    --button-bg: #2a475e; /* Couleur de fond des boutons */
+}
+
+/* :root {
     --primary-bg: #262324;
     --primary-text: #fcfcec;
     --accent-color: #fdd900;
     --highlight-color: #3a3a3a;
     --button-bg: #2d2d2d;
-}
+} */
 
 body {
     background-color: var(--primary-bg);
@@ -170,6 +168,16 @@ body::after {
     border: 2px solid var(--accent-color);
     border-radius: 15px;
     padding: 1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-title {
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.card-text {
+    color: var(--primary-text);
 }
 
 .modal-content {
@@ -190,12 +198,9 @@ body::after {
 }
 
 .profile-header {
-    background-color: var(--primary-bg);
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
+    background: linear-gradient(to right, #1b2838, #2a475e);
+    padding: 30px;
+    border-bottom: 2px solid var(--accent-color);
 }
 
 .profile-avatar {
@@ -573,7 +578,7 @@ body::after {
 
 .achievement-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 15px;
     margin-top: 15px;
 }
@@ -618,7 +623,6 @@ body::after {
     border-radius: 50%;
     object-fit: cover;
 }
-
 
 .friend-name {
     font-size: 1.2em;

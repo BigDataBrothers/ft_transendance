@@ -2,31 +2,78 @@
 {% load static %}
 {% block content %}
 <div class="container mt-4">
-    <h1>Welcome to Our Gaming Platform</h1>
-    <p>Explore the latest games, connect with friends, and track your progress.</p>
+    <div class="jumbotron text-center bg-dark text-white">
+        <h1 class="display-4">Welcome to Our Gaming Platform</h1>
+        <p class="lead">Explore the latest games, connect with friends, and track your progress.</p>
+    </div>
 
     {% if user.is_authenticated %}
-        <div class="user-info">
-            <h2>Welcome, {{ user.username }}!</h2>
-            <p>You have played {{ user_profile.games_played }} games and achieved a win rate of {{ user_profile.win_rate }}%.</p>
-            <a href="{% url 'accounts:profile' %}" class="btn btn-primary">View Your Profile</a>
+        <div class="user-info card mb-4 shadow">
+            <div class="card-body">
+                <h2 class="card-title">Welcome, {{ user.username }}!</h2>
+                <p class="card-text">You have played {{ user_profile.games_played }} games and achieved a win rate of {{ user_profile.win_rate }}%.</p>
+                <a href="{% url 'accounts:profile' %}" class="btn btn-primary">View Your Profile</a>
+            </div>
+        </div>
+
+        <div class="featured-games card mb-4 shadow">
+            <div class="card-body">
+                <h2 class="card-title">Featured Games</h2>
+                <!-- Add your featured games here -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card mb-4 shadow-sm">
+                            <img src="{% static 'images/game1.jpg' %}" class="card-img-top" alt="Game 1">
+                            <div class="card-body">
+                                <h5 class="card-title">Game 1</h5>
+                                <p class="card-text">Description of Game 1.</p>
+                                <a href="#" class="btn btn-primary">Play Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-4 shadow-sm">
+                            <img src="{% static 'images/game2.jpg' %}" class="card-img-top" alt="Game 2">
+                            <div class="card-body">
+                                <h5 class="card-title">Game 2</h5>
+                                <p class="card-text">Description of Game 2.</p>
+                                <a href="#" class="btn btn-primary">Play Now</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-4 shadow-sm">
+                            <img src="{% static 'images/game3.jpg' %}" class="card-img-top" alt="Game 3">
+                            <div class="card-body">
+                                <h5 class="card-title">Game 3</h5>
+                                <p class="card-text">Description of Game 3.</p>
+                                <a href="#" class="btn btn-primary">Play Now</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="recent-activity card mb-4 shadow">
+            <div class="card-body">
+                <h2 class="card-title">Recent Activity</h2>
+                <!-- Add recent activity here -->
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">User1 achieved a new high score in Game 1.</li>
+                    <li class="list-group-item">User2 completed all levels in Game 2.</li>
+                    <li class="list-group-item">User3 joined the platform.</li>
+                </ul>
+            </div>
         </div>
     {% else %}
-        <div class="login-prompt">
-            <h2>Please log in to access all features</h2>
-            <a href="{% url 'login' %}" class="btn btn-primary">Log In</a>
-            <a href="{% url 'accounts:signup' %}" class="btn btn-secondary">Sign Up</a>
+        <div class="login-prompt card mb-4 shadow">
+            <div class="card-body">
+                <h2 class="card-title">Please log in to access all features</h2>
+                <a href="{% url 'login' %}" class="btn btn-primary">Log In</a>
+                <a href="{% url 'accounts:signup' %}" class="btn btn-secondary">Sign Up</a>
+            </div>
         </div>
     {% endif %}
-
-    <div class="featured-games">
-        <h2>Featured Games</h2>
-        <!-- Add your featured games here -->
-    </div>
-
-    <div class="recent-activity">
-        <h2>Recent Activity</h2>
-        <!-- Add recent activity here -->
-    </div>
 </div>
 {% endblock %}

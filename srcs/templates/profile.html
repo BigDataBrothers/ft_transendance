@@ -1,21 +1,28 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block content %}
 <div class="container mt-4">
     {% if user.is_authenticated %}
+    <!-- Profile Background Section -->
     <div class="profile-background">
+        <!-- Profile Header Section -->
         <div class="profile-header">
             <div class="profile-summary">
+                <!-- Avatar Section -->
                 <div class="avatar-section">
                     {% if user_profile.profile_photo %}
                         <img src="{{ user_profile.profile_photo.url }}" alt="Avatar" class="profile-avatar">
                     {% else %}
                         <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="profile-avatar">
                     {% endif %}
+                    <!-- Online Status -->
                     <div class="online-status online">Online</div>
                 </div>
+                <!-- Profile Details -->
                 <div class="profile-details">
                     <h1>{{ user.username }}</h1>
+                    <!-- Player Level -->
                     <div class="player-level">
                         <span class="level-icon">{{ user_profile.level }}</span>
                         <div class="level-progress">
@@ -28,8 +35,11 @@
             </div>
         </div>
 
+        <!-- Profile Content Section -->
         <div class="profile-content">
+            <!-- Sidebar Section -->
             <div class="sidebar">
+                <!-- Recent Activity Card -->
                 <div class="profile-card">
                     <div class="recent-activity">
                         <h3>Recent Activity</h3>
@@ -38,14 +48,18 @@
                     </div>
                 </div>
 
+                <!-- Customize Profile Colors Button -->
                 <button id="customizeProfile" class="profile-link custom-change-password-btn" style="margin-top: 10px;">
                     <i class="fas fa-palette"></i> Customize Profile Colors
                 </button>
 
+                <!-- Profile Links Section -->
                 <div class="profile-links">
+                    <!-- Change Password Link -->
                     <a href="{% url 'password_change' %}" class="profile-link custom-change-password-btn">
                         <i class="fas fa-key"></i> Change Password
                     </a>
+                    <!-- Logout Form -->
                     <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
                         <button type="submit" class="profile-link danger">
@@ -55,22 +69,28 @@
                 </div>
             </div>
 
+            <!-- Main Content Section -->
             <div class="main-content">
+                <!-- Stats Showcase Section -->
                 <div class="stats-showcase">
+                    <!-- Stat Card for Games Played -->
                     <div class="stat-card">
                         <h4>Games Played</h4>
                         <span class="stat-value">{{ user_profile.games_played }}</span>
                     </div>
+                    <!-- Stat Card for Win Rate -->
                     <div class="stat-card">
                         <h4>Win Rate</h4>
                         <span class="stat-value">{{ user_profile.win_rate }}%</span>
                     </div>
+                    <!-- Stat Card for Total Score -->
                     <div class="stat-card">
                         <h4>Total Score</h4>
                         <span class="stat-value">{{ user_profile.total_score }}</span>
                     </div>
                 </div>
 
+                <!-- Achievements Section -->
                 <div class="achievements">
                     <h3>Recent Achievements</h3>
                     <div class="achievement-grid">
@@ -81,18 +101,20 @@
                         </div>
                         {% endfor %}
                     </div>
+                    <!-- Add Achievement Button -->
                     <a href="{% url 'accounts:add_achievement' %}" class="btn btn-primary">Add Achievement</a>
                 </div>
 
+                <!-- Friends Section -->
                 <div class="friends-section">
                     <h3>Friends <span class="friends-count">{{ user_profile.friends.count }}</span></h3>
                     <div class="friends-list">
                         {% for friend in user_profile.friends.all %}
                         <div class="friend">
                             {% if friend.profile_picture %}
-                                <img src="{{ friend.profile_picture.url }}" alt="{{ friend.user.username }}" class="friend-avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                                <img src="{{ friend.profile_picture.url }}" alt="{{ friend.user.username }}" class="friend-avatar">
                             {% else %}
-                                <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="friend-avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover;">
+                                <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="friend-avatar">
                             {% endif %}
                             <span class="friend-name">{{ friend.user.username }}</span>
                         </div>
@@ -103,23 +125,27 @@
         </div>
     </div>
 
-    <!-- Modal for the color picker -->
+    <!-- Modal for the Color Picker -->
     <div id="colorPickerModal" class="color-picker-modal">
         <div class="color-picker-container">
             <h3 style="color: #fcfcec; margin-bottom: 15px;">Customize Profile Colors</h3>
 
+            <!-- Color Input Group for Start Color -->
             <div class="color-input-group">
                 <label style="color: #fcfcec">Start Color:</label>
                 <input type="color" id="startColor" class="color-input" value="#1b2838">
             </div>
 
+            <!-- Color Input Group for End Color -->
             <div class="color-input-group">
                 <label style="color: #fcfcec">End Color:</label>
                 <input type="color" id="endColor" class="color-input" value="#2a475e">
             </div>
 
+            <!-- Preview Gradient -->
             <div class="preview-gradient" id="gradientPreview"></div>
 
+            <!-- Modal Buttons -->
             <div class="modal-buttons">
                 <button onclick="applyGradient()" class="profile-link custom-change-password-btn">
                     Apply
@@ -131,6 +157,7 @@
         </div>
     </div>
 
+    <!-- JavaScript for Color Picker Modal -->
     <script>
         // Function to open the color picker
         document.getElementById('customizeProfile').addEventListener('click', () => {
@@ -182,6 +209,7 @@
         });
     </script>
     {% else %}
+    <!-- Login Prompt Section -->
     <div class="login-prompt">
         <h2>Please log in to view your profile</h2>
         <a href="{% url 'login' %}" class="btn">Log In</a>
