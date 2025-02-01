@@ -1,26 +1,33 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.conf import settings
-from urllib.parse import urlencode
-from authentification.models import User
-import secrets
-import requests
-from urllib.parse import urlencode
-# Create your views here.
-# authentication/views.py
 from django.contrib.auth import login, authenticate, logout
-# import des fonctions login et authenticate
+from django.shortcuts import render, redirect
+from authentification.models import User
+from django.http import HttpResponse
+from django.contrib import messages
+from urllib.parse import urlencode
+from django.conf import settings
+import requests
+import secrets
 from . import forms
 
-def logout_user(request):
+# class CustomLoginView(LoginView):
+#     template_name = 'authentification/login.html'
 
+#     def form_valid(self, form):
+#         response = super().form_valid(form)
+#         messages.success(self.request, 'You are successfully logged in.')
+#         return response
+
+#     def form_invalid(self, form):
+#         messages.error(self.request, 'Invalid credentials.')
+#         return self.render_to_response(self.get_context_data(form=form))
+
+def logout_user(request):
     logout(request)
-    return HttpResponse(status=204)
+    messages.success(request, 'You have been successfully logged out.')
+    return redirect('home')
 
 def login_page(request):
     form = forms.LoginForm()
-    message = ''
-
     if request.method == 'POST':
         form = forms.LoginForm(request.POST)
         if form.is_valid():
@@ -32,12 +39,13 @@ def login_page(request):
                 login(request, user)
                 user.online = True
                 user.save()
-                message = f'Bonjour, {user.username}! Vous êtes connecté.'
-
+                messages.success(request, 'You are successfully logged in.')
+                return redirect('home')  # Redirect to the home page
             else:
-                message = 'Identifiants invalides.'
+                messages.error(request, 'Invalid credentials.')
     return render(
-        request, 'authentification/login.html', context={'form': form, 'message': message})
+        request, 'authentification/login.html', context={'form': form}
+    )
 
 def signup_page(request):
     form = forms.SignupForm()
@@ -47,6 +55,7 @@ def signup_page(request):
             user = form.save()
             # auto-login user
             login(request, user)
+            messages.success(request, 'Your account has been created successfully.')
             return redirect('login')
     return render(request, 'authentification/signup.html', context={'form': form})
 
@@ -70,21 +79,21 @@ def initiate_42_auth(request):
     return redirect(auth_url)
 
 def callback_view(request):
-    """Étape 2: Traitement du callback et échange du code"""
+    """Step 2: Process the callback and exchange the code"""
     try:
-        # Vérification du state pour la sécurité
+        # State verification for security
         state = request.GET.get('state')
         if state != request.session.get('oauth_state'):
-            print("État invalide")
+            print("Invalid state")
             return redirect('login')
 
-        # Récupération du code
+        # Retrieve the code
         code = request.GET.get('code')
         if not code:
-            print("Pas de code reçu")
+            print("No code received")
             return redirect('login')
 
-        # Échange du code contre un token
+        # Exchange the code for a token
         token_response = requests.post(
             settings.TOKEN_URL,
             data={
@@ -98,13 +107,13 @@ def callback_view(request):
 
         print("Token response:", token_response.text)  # Debug
         if not token_response.ok:
-            print(f"Erreur token: {token_response.status_code}")
+            print(f"Token error: {token_response.status_code}")
             return redirect('login')
 
         token_data = token_response.json()
         access_token = token_data.get('access_token')
 
-        # Utilisation du token pour récupérer les informations utilisateur
+        # Use the token to retrieve user information
         user_response = requests.get(
             'https://api.intra.42.fr/v2/me',
             headers={'Authorization': f'Bearer {access_token}'}
@@ -112,21 +121,21 @@ def callback_view(request):
 
         print("User response:", user_response.text)  # Debug
         if not user_response.ok:
-            print(f"Erreur user data: {user_response.status_code}")
+            print(f"User data error: {user_response.status_code}")
             return redirect('login')
 
         user_data = user_response.json()
         print("User data:", user_data)  # Debug
 
-        # Création de l'utilisateur avec un mot de passe aléatoire
+        # Create the user with a random password
         from django.contrib.auth.hashers import make_password
         import uuid
 
         try:
             user = User.objects.get(username=user_data['login'])
-            print(f"Utilisateur existant trouvé: {user.username}")
+            print(f"Existing user found: {user.username}")
         except User.DoesNotExist:
-            print("Création d'un nouvel utilisateur")
+            print("Creating a new user")
             user = User.objects.create_user(
                 username=user_data['login'],
                 email=user_data['email'],
@@ -136,14 +145,14 @@ def callback_view(request):
             )
             user.set_unusable_password()
 
-            # Ajout des informations spécifiques 42
+            # Add 42-specific information
             user.is_42_user = True
             user.is_staff = user_data.get('staff?', False)
             user.intra_profile_url = user_data.get('url')
 
             user.save()
 
-        # Mise à jour de la photo de profil
+        # Update the profile photo
         if 'image' in user_data and 'link' in user_data['image']:
             try:
                 image_response = requests.get(user_data['image']['link'])
@@ -156,17 +165,18 @@ def callback_view(request):
                         save=True
                     )
             except Exception as e:
-                print(f"Erreur lors du traitement de l'image: {e}")
+                print(f"Error processing image: {e}")
 
-        # Connexion de l'utilisateur
+        # Log in the user
         user.online = True
         user.save()
 
-        # Login direct sans authentification par mot de passe
+        # Direct login without password authentication
         login(request, user)
-        print(f"Utilisateur {user.username} connecté avec succès")
+        messages.success(request, 'You have successfully logged in via 42.')
+        print(f"User {user.username} logged in successfully")
         return redirect('home')
 
     except Exception as e:
-        print(f"Erreur générale: {e}")
+        print(f"General error: {e}")
         return redirect('login')

@@ -1,15 +1,12 @@
-# from django.shortcuts import render, get_object_or_404, redirect
-# from django.contrib.auth.decorators import login_required
-# from .models import Profile
-# from .forms import AchievementForm
-
 from django.views.generic import CreateView
+from django.contrib.auth.views import LoginView
 from django.urls import reverse_lazy
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Profile, Achievement
 from .forms import AchievementForm
+from django.contrib import messages
 
 class SignUpView(CreateView):
     form_class = UserCreationForm
@@ -18,10 +15,10 @@ class SignUpView(CreateView):
 
 @login_required
 def profile_view(request):
-    # Plus besoin de get_object_or_404(Profile) puisque l'utilisateur est déjà dans request.user
+
     user = request.user
     context = {
-        'user_profile': user,  # Utilisez directement l'utilisateur
+        'user_profile': user,
     }
     return render(request, 'profile.html', context)
 
