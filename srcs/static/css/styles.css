@@ -696,6 +696,58 @@ body::after {
     border: none;
     border-radius: 5px;
 }
+/***/
+.signup-section input[type="file"] {
+    width: 100%; /* Largeur complète du conteneur */
+    max-width: 100%; /* Ne dépasse pas la largeur du parent */
+    padding: 0.5rem;
+    box-sizing: border-box; /* Inclut le padding dans la largeur */
+    margin-bottom: 1rem;
+}
+
+.settings-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #f4f4f4;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.settings-section {
+    margin-bottom: 20px;
+    background-color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.settings-section h3 {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.settings-section .profile-link {
+    display: block;
+    margin-bottom: 10px;
+    text-decoration: none;
+    color: #2a475e;
+    transition: color 0.3s ease;
+}
+
+.settings-section .profile-link:hover {
+    color: #1b2838;
+}
+
+.settings-section .profile-link i {
+    margin-right: 10px;
+}
+
+#submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
 
 /**/
 

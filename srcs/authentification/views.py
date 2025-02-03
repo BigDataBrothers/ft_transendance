@@ -168,3 +168,4 @@ def callback_view(request):
     except Exception as e:
         print(f"General error: {e}")
         return redirect('login')
+    

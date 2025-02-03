@@ -35,3 +35,6 @@ def add_achievement(request):
     else:
         form = AchievementForm()
     return render(request, 'add_achievement.html', {'form': form})
+
+# def settings_view(request):
+#     return render(request, 'settings.html')

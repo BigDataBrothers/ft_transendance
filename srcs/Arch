@@ -1,11 +1,11 @@
 .:
 total 28
-drwxr-xr-x 9 myassine 2022_paris 4096 Jan 31 16:00 .
+drwxr-xr-x 9 myassine 2022_paris 4096 Feb  1 18:26 .
 drwxr-xr-x 5 myassine 2022_paris   60 Jan 31 11:49 ..
 drwxr-xr-x 4 myassine 2022_paris  173 Jan 31 11:49 accounts
--rw-r--r-- 1 myassine 2022_paris    0 Feb  1 14:04 Arch
+-rw-r--r-- 1 myassine 2022_paris    0 Feb  3 17:05 Arch
 drwxr-xr-x 4 myassine 2022_paris  156 Jan 31 15:42 authentification
-drwxr-xr-x 3 myassine 2022_paris  108 Jan 31 11:49 django_project
+drwxr-xr-x 3 myassine 2022_paris  124 Feb  1 18:26 django_project
 -rw-r--r-- 1 myassine 2022_paris 1085 Jan 31 20:15 docker-compose.yml
 -rw-r--r-- 1 myassine 2022_paris  571 Jan 31 20:10 Dockerfile
 -rw-r--r-- 1 myassine 2022_paris   22 Jan 31 11:49 .dockerignore
@@ -16,22 +16,22 @@ drwxr-xr-x 3 myassine 2022_paris   21 Jan 31 20:18 media
 -rw-r--r-- 1 myassine 2022_paris    0 Jan 31 11:49 secrets
 drwxr-xr-x 6 myassine 2022_paris   54 Jan 31 11:49 static
 drwxr-xr-x 2 myassine 2022_paris    6 Jan 31 11:53 staticfiles
-drwxr-xr-x 3 myassine 2022_paris  108 Jan 31 12:11 templates
+drwxr-xr-x 3 myassine 2022_paris  129 Feb  3 17:00 templates
 
 ./accounts:
 total 36
 drwxr-xr-x 4 myassine 2022_paris  173 Jan 31 11:49 .
-drwxr-xr-x 9 myassine 2022_paris 4096 Jan 31 16:00 ..
+drwxr-xr-x 9 myassine 2022_paris 4096 Feb  1 18:26 ..
 -rw-r--r-- 1 myassine 2022_paris   63 Jan 31 11:49 admin.py
 -rw-r--r-- 1 myassine 2022_paris  148 Jan 31 11:49 apps.py
 -rw-r--r-- 1 myassine 2022_paris  191 Jan 31 12:42 forms.py
 -rw-r--r-- 1 myassine 2022_paris    0 Jan 31 11:49 __init__.py
 drwxr-xr-x 3 myassine 2022_paris 4096 Jan 31 16:07 migrations
--rw-r--r-- 1 myassine 2022_paris 1384 Jan 31 16:06 models.py
+-rw-r--r-- 1 myassine 2022_paris 1384 Feb  3 12:53 models.py
 drwxr-xr-x 2 myassine 2022_paris  182 Jan 31 15:36 __pycache__
 -rw-r--r-- 1 myassine 2022_paris   60 Jan 31 11:49 tests.py
 -rw-r--r-- 1 myassine 2022_paris  647 Jan 31 20:41 urls.py
--rw-r--r-- 1 myassine 2022_paris 1184 Feb  1 13:44 views.py
+-rw-r--r-- 1 myassine 2022_paris 1418 Feb  3 17:01 views.py
 
 ./accounts/migrations:
 total 40
@@ -72,22 +72,25 @@ drwxr-xr-x 4 myassine 2022_paris  173 Jan 31 11:49 ..
 ./authentification:
 total 32
 drwxr-xr-x 4 myassine 2022_paris  156 Jan 31 15:42 .
-drwxr-xr-x 9 myassine 2022_paris 4096 Jan 31 16:00 ..
+drwxr-xr-x 9 myassine 2022_paris 4096 Feb  1 18:26 ..
 -rw-r--r-- 1 myassine 2022_paris  131 Jan 31 15:42 admin.py
 -rw-r--r-- 1 myassine 2022_paris  164 Jan 31 15:37 apps.py
 -rw-r--r-- 1 myassine 2022_paris  521 Jan 31 15:42 forms.py
 -rw-r--r-- 1 myassine 2022_paris    0 Jan 31 15:37 __init__.py
-drwxr-xr-x 2 myassine 2022_paris   48 Jan 31 16:07 migrations
--rw-r--r-- 1 myassine 2022_paris  606 Jan 31 15:41 models.py
+drwxr-xr-x 2 myassine 2022_paris  168 Feb  3 13:00 migrations
+-rw-r--r-- 1 myassine 2022_paris  606 Feb  3 13:00 models.py
 drwxr-xr-x 3 myassine 2022_paris   30 Jan 31 15:40 templates
 -rw-r--r-- 1 myassine 2022_paris   60 Jan 31 15:37 tests.py
--rw-r--r-- 1 myassine 2022_paris 5840 Feb  1 14:01 views.py
+-rw-r--r-- 1 myassine 2022_paris 5936 Feb  3 17:01 views.py
 
 ./authentification/migrations:
-total 4
-drwxr-xr-x 2 myassine 2022_paris   48 Jan 31 16:07 .
+total 16
+drwxr-xr-x 2 myassine 2022_paris  168 Feb  3 13:00 .
 drwxr-xr-x 4 myassine 2022_paris  156 Jan 31 15:42 ..
 -rw-r--r-- 1 myassine 2022_paris 3101 Jan 31 16:07 0001_initial.py
+-rw-r--r-- 1 myassine 2022_paris  470 Feb  3 12:40 0002_alter_user_profile_photo.py
+-rw-r--r-- 1 myassine 2022_paris  468 Feb  3 12:54 0003_alter_user_profile_photo.py
+-rw-r--r-- 1 myassine 2022_paris  468 Feb  3 13:00 0004_alter_user_profile_photo.py
 -rw-r--r-- 1 myassine 2022_paris    0 Jan 31 15:37 __init__.py
 
 ./authentification/templates:
@@ -98,26 +101,27 @@ drwxr-xr-x 2 myassine 2022_paris  43 Jan 31 15:56 authentification
 
 ./authentification/templates/authentification:
 total 8
-drwxr-xr-x 2 myassine 2022_paris  43 Jan 31 15:56 .
-drwxr-xr-x 3 myassine 2022_paris  30 Jan 31 15:40 ..
--rw-r--r-- 1 myassine 2022_paris 457 Jan 31 19:58 login.html
--rw-r--r-- 1 myassine 2022_paris 391 Jan 31 15:45 signup.html
+drwxr-xr-x 2 myassine 2022_paris   43 Jan 31 15:56 .
+drwxr-xr-x 3 myassine 2022_paris   30 Jan 31 15:40 ..
+-rw-r--r-- 1 myassine 2022_paris  457 Feb  1 15:48 login.html
+-rw-r--r-- 1 myassine 2022_paris 1945 Feb  3 16:39 signup.html
 
 ./django_project:
-total 24
-drwxr-xr-x 3 myassine 2022_paris  108 Jan 31 11:49 .
-drwxr-xr-x 9 myassine 2022_paris 4096 Jan 31 16:00 ..
+total 28
+drwxr-xr-x 3 myassine 2022_paris  124 Feb  1 18:26 .
+drwxr-xr-x 9 myassine 2022_paris 4096 Feb  1 18:26 ..
 -rw-r--r-- 1 myassine 2022_paris  405 Jan 31 11:49 asgi.py
 -rw-r--r-- 1 myassine 2022_paris    0 Jan 31 11:49 __init__.py
 drwxr-xr-x 2 myassine 2022_paris  126 Jan 31 15:36 __pycache__
 -rw-r--r-- 1 myassine 2022_paris 4482 Jan 31 20:15 settings.py
--rw-r--r-- 1 myassine 2022_paris 1320 Jan 31 20:21 urls.py
+-rw-r--r-- 1 myassine 2022_paris 1397 Feb  3 17:02 urls.py
+-rw-r--r-- 1 myassine 2022_paris  358 Feb  1 18:26 views.py
 -rw-r--r-- 1 myassine 2022_paris  405 Jan 31 11:49 wsgi.py
 
 ./django_project/__pycache__:
 total 16
 drwxr-xr-x 2 myassine 2022_paris  126 Jan 31 15:36 .
-drwxr-xr-x 3 myassine 2022_paris  108 Jan 31 11:49 ..
+drwxr-xr-x 3 myassine 2022_paris  124 Feb  1 18:26 ..
 -rw-r--r-- 1 myassine 2022_paris  162 Jan 31 15:36 __init__.cpython-310.pyc
 -rw-r--r-- 1 myassine 2022_paris 3052 Jan 31 15:36 settings.cpython-310.pyc
 -rw-r--r-- 1 myassine 2022_paris 1520 Jan 31 11:49 urls.cpython-310.pyc
@@ -126,47 +130,36 @@ drwxr-xr-x 3 myassine 2022_paris  108 Jan 31 11:49 ..
 ./media:
 total 8
 drwxr-xr-x 3 myassine 2022_paris   21 Jan 31 20:18 .
-drwxr-xr-x 9 myassine 2022_paris 4096 Jan 31 16:00 ..
-drwxr-xr-x 2 myassine 2022_paris 4096 Feb  1 13:54 avatars
+drwxr-xr-x 9 myassine 2022_paris 4096 Feb  1 18:26 ..
+drwxr-xr-x 2 myassine 2022_paris 4096 Feb  3 16:50 avatars
 
 ./media/avatars:
-total 16192
-drwxr-xr-x 2 myassine 2022_paris   4096 Feb  1 13:54 .
+total 896
+drwxr-xr-x 2 myassine 2022_paris   4096 Feb  3 16:50 .
 drwxr-xr-x 3 myassine 2022_paris     21 Jan 31 20:18 ..
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:47 avatar_myassine_bp7td7q.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:18 avatar_myassine_dystuN6.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:22 avatar_myassine_folV7JQ.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:21 avatar_myassine_gQESo2x.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:28 avatar_myassine_iYzgVje.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:18 avatar_myassine.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:22 avatar_myassine_kpQaEvl.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:18 avatar_myassine_MHp9gmo.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:45 avatar_myassine_mSihGGv.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:46 avatar_myassine_nfU75Jk.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Feb  1 13:48 avatar_myassine_pvqTrdh.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:42 avatar_myassine_qT7TyIH.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Feb  1 13:54 avatar_myassine_rXDpEsA.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Feb  1 13:54 avatar_myassine_t7oqswn.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:18 avatar_myassine_X72CjAL.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:22 avatar_myassine_y0s493N.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:23 avatar_myassine_YOJWXIT.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:46 avatar_myassine_Z5rpgrt.jpg
--rw-r--r-- 1 myassine 2022_paris 871728 Jan 31 20:24 avatar_myassine_ZNRguAp.jpg
+-rw-r--r-- 1 myassine 2022_paris 871728 Feb  3 16:35 avatar_myassine.jpg
+-rw-r--r-- 1 myassine 2022_paris  14370 Jan 31 11:49 default.jpg
+-rw-r--r-- 1 myassine 2022_paris   1730 Feb  1 16:15 default_user_black_and_white_0TaR7pc.jpg
+-rw-r--r-- 1 myassine 2022_paris   1730 Feb  1 16:14 default_user_black_and_white_bDfs3Xz.jpg
+-rw-r--r-- 1 myassine 2022_paris   1730 Feb  3 16:50 default_user_black_and_white_EHsWiYC.jpg
+-rw-r--r-- 1 myassine 2022_paris   1730 Feb  1 14:19 default_user_black_and_white_GdXTnAw.jpg
+-rw-r--r-- 1 myassine 2022_paris   1730 Feb  1 18:10 default_user_black_and_white_JNWWbm3.jpg
+-rw-r--r-- 1 myassine 2022_paris   1730 Feb  1 14:17 default_user_black_and_white.jpg
 
 ./static:
 total 4
 drwxr-xr-x 6 myassine 2022_paris   54 Jan 31 11:49 .
-drwxr-xr-x 9 myassine 2022_paris 4096 Jan 31 16:00 ..
+drwxr-xr-x 9 myassine 2022_paris 4096 Feb  1 18:26 ..
 drwxr-xr-x 2 myassine 2022_paris   24 Jan 31 11:49 css
 drwxr-xr-x 2 myassine 2022_paris   30 Jan 31 11:49 fonts
-drwxr-xr-x 2 myassine 2022_paris   88 Jan 31 11:49 images
+drwxr-xr-x 2 myassine 2022_paris  113 Feb  3 16:52 images
 drwxr-xr-x 2 myassine 2022_paris   20 Jan 31 11:49 js
 
 ./static/css:
 total 16
 drwxr-xr-x 2 myassine 2022_paris    24 Jan 31 11:49 .
 drwxr-xr-x 6 myassine 2022_paris    54 Jan 31 11:49 ..
--rw-r--r-- 1 myassine 2022_paris 13450 Jan 31 11:49 styles.css
+-rw-r--r-- 1 myassine 2022_paris 14765 Feb  3 17:02 styles.css
 
 ./static/fonts:
 total 84
@@ -175,12 +168,14 @@ drwxr-xr-x 6 myassine 2022_paris    54 Jan 31 11:49 ..
 -rw-r--r-- 1 myassine 2022_paris 82480 Jan 31 11:49 PressStart2P.ttf
 
 ./static/images:
-total 60
-drwxr-xr-x 2 myassine 2022_paris    88 Jan 31 11:49 .
-drwxr-xr-x 6 myassine 2022_paris    54 Jan 31 11:49 ..
--rw-r--r-- 1 myassine 2022_paris 14370 Jan 31 11:49 default_avatar.jpg
--rw-r--r-- 1 myassine 2022_paris 17765 Jan 31 11:49 UserBlackBgWhite.jpg
--rw-r--r-- 1 myassine 2022_paris 24004 Jan 31 11:49 UserYelloBgWhite.jpg
+total 492
+drwxr-xr-x 2 myassine 2022_paris    113 Feb  3 16:52 .
+drwxr-xr-x 6 myassine 2022_paris     54 Jan 31 11:49 ..
+-rw-r--r-- 1 myassine 2022_paris 106043 Feb  3 16:52 game1.jpg
+-rw-r--r-- 1 myassine 2022_paris  92044 Feb  3 16:34 game2.jpg
+-rw-r--r-- 1 myassine 2022_paris 256994 Feb  3 16:37 game3.jpg
+-rw-r--r-- 1 myassine 2022_paris  17765 Jan 31 11:49 UserBlackBgWhite.jpg
+-rw-r--r-- 1 myassine 2022_paris  24004 Jan 31 11:49 UserYelloBgWhite.jpg
 
 ./static/js:
 total 0
@@ -191,21 +186,22 @@ drwxr-xr-x 6 myassine 2022_paris 54 Jan 31 11:49 ..
 ./staticfiles:
 total 4
 drwxr-xr-x 2 myassine 2022_paris    6 Jan 31 11:53 .
-drwxr-xr-x 9 myassine 2022_paris 4096 Jan 31 16:00 ..
+drwxr-xr-x 9 myassine 2022_paris 4096 Feb  1 18:26 ..
 
 ./templates:
-total 28
-drwxr-xr-x 3 myassine 2022_paris  108 Jan 31 12:11 .
-drwxr-xr-x 9 myassine 2022_paris 4096 Jan 31 16:00 ..
--rw-r--r-- 1 myassine 2022_paris  297 Jan 31 12:42 add_achievement.html
--rw-r--r-- 1 myassine 2022_paris 2473 Jan 31 12:27 base.html
--rw-r--r-- 1 myassine 2022_paris 1150 Jan 31 19:55 home.html
--rw-r--r-- 1 myassine 2022_paris 8777 Jan 31 20:41 profile.html
-drwxr-xr-x 2 myassine 2022_paris   67 Jan 31 15:56 registration
+total 32
+drwxr-xr-x 3 myassine 2022_paris   129 Feb  3 17:00 .
+drwxr-xr-x 9 myassine 2022_paris  4096 Feb  1 18:26 ..
+-rw-r--r-- 1 myassine 2022_paris   297 Jan 31 12:42 add_achievement.html
+-rw-r--r-- 1 myassine 2022_paris  2832 Feb  1 15:47 base.html
+-rw-r--r-- 1 myassine 2022_paris  3856 Feb  1 20:03 home.html
+-rw-r--r-- 1 myassine 2022_paris 10021 Feb  3 16:59 profile.html
+drwxr-xr-x 2 myassine 2022_paris    67 Jan 31 15:56 registration
+-rw-r--r-- 1 myassine 2022_paris  1114 Feb  3 17:00 settings.html
 
 ./templates/registration:
 total 8
 drwxr-xr-x 2 myassine 2022_paris  67 Jan 31 15:56 .
-drwxr-xr-x 3 myassine 2022_paris 108 Jan 31 12:11 ..
+drwxr-xr-x 3 myassine 2022_paris 129 Feb  3 17:00 ..
 -rw-r--r-- 1 myassine 2022_paris 195 Jan 31 11:49 password_change_done.html
 -rw-r--r-- 1 myassine 2022_paris 267 Jan 31 11:49 password_change.html
