@@ -9,7 +9,7 @@ class User(AbstractUser):
     profile_photo = models.ImageField(
         verbose_name='Avatar',
         upload_to='avatars/',
-        default='avatars/default.png'
+        default='avatars/default.jpg'
     )
     online = models.BooleanField(default=False)
 
