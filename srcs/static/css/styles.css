@@ -1,19 +1,22 @@
+/* Variables globales pour les couleurs et les thèmes */
 :root {
-    --primary-bg: #171a21; /* Couleur de fond principale de Steam */
-    --primary-text: #c6d4df; /* Couleur de texte principale de Steam */
-    --accent-color: #66c0f4; /* Couleur d'accent bleue de Steam */
-    --highlight-color: #1b2838; /* Couleur de surbrillance */
-    --button-bg: #2a475e; /* Couleur de fond des boutons */
+    --primary-bg: #171a21;
+    --primary-text: #c6d4df;
+    --accent-color: #66c0f4;
+    --highlight-color: #1b2838;
+    --button-bg: #2a475e;
 }
 
-/* :root {
+/* Thème sombre */
+[data-theme="dark"] {
     --primary-bg: #262324;
     --primary-text: #fcfcec;
     --accent-color: #fdd900;
     --highlight-color: #3a3a3a;
     --button-bg: #2d2d2d;
-} */
+}
 
+/* Styles globaux pour le corps de la page */
 body {
     background-color: var(--primary-bg);
     color: var(--primary-text);
@@ -26,6 +29,7 @@ body {
     position: relative;
 }
 
+/* Effet de grille en arrière-plan */
 body::after {
     content: '';
     position: fixed;
@@ -44,6 +48,7 @@ body::after {
     z-index: 1000;
 }
 
+/* Styles pour la barre de navigation */
 .navbar {
     background-color: var(--primary-bg) !important;
     border-bottom: 2px solid var(--accent-color);
@@ -94,6 +99,7 @@ body::after {
     transform: translate(-50%, -50%);
 }
 
+/* Styles pour le conteneur principal */
 .container {
     max-width: 1200px;
     padding: 2rem;
@@ -107,18 +113,19 @@ body::after {
     flex-grow: 1;
 }
 
+/* Styles pour les boutons */
 .btn {
     background-color: var(--button-bg);
     color: var(--primary-text);
     border: none;
     border-radius: 25px;
     padding: 1rem 2rem;
-    margin: 0.5rem;
     font-family: 'Press Start 2P';
     text-transform: uppercase;
     font-size: 0.8em;
     transition: all 0.3s ease;
     position: relative;
+    margin: 0.5rem auto;
 }
 
 .btn:hover, .btn:focus {
@@ -153,6 +160,7 @@ body::after {
     outline: none;
 }
 
+/* Styles pour les champs de formulaire */
 .form-control {
     background: var(--primary-bg);
     border: 1px solid var(--accent-color);
@@ -163,23 +171,45 @@ body::after {
     font-size: 0.8em;
 }
 
+/* Styles pour les cartes */
 .card {
     background: var(--primary-bg);
     border: 2px solid var(--accent-color);
     border-radius: 15px;
     padding: 1rem;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    min-width: 200px;
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    flex-grow: 1;
 }
 
 .card-title {
     color: var(--accent-color);
     margin-bottom: 1rem;
+    word-wrap: break-word;
 }
 
 .card-text {
     color: var(--primary-text);
 }
 
+/* Styles pour les modals */
 .modal-content {
     background-color: var(--primary-bg);
     border: 2px solid var(--accent-color);
@@ -189,6 +219,7 @@ body::after {
     border-color: var(--accent-color);
 }
 
+/* Styles pour les liens de déconnexion */
 #logout-link {
     color: #dc3545 !important;
 }
@@ -197,6 +228,7 @@ body::after {
     color: #f8d7da !important;
 }
 
+/* Styles pour la section de profil */
 .profile-header {
     background: linear-gradient(to right, #1b2838, #2a475e);
     padding: 30px;
@@ -260,6 +292,7 @@ body::after {
     transition: width 0.3s ease;
 }
 
+/* Styles pour la section de connexion */
 .login-section {
     background-color: var(--button-bg);
     padding: 2rem;
@@ -331,6 +364,7 @@ body::after {
     color: var(--highlight-color);
 }
 
+/* Styles pour la section d'inscription */
 .signup-section {
     background-color: var(--button-bg);
     padding: 2rem;
@@ -402,6 +436,7 @@ body::after {
     color: var(--highlight-color);
 }
 
+/* Styles pour la section de succès */
 .success-section {
     background-color: var(--button-bg);
     padding: 2rem;
@@ -423,7 +458,7 @@ body::after {
     margin-top: 1rem;
 }
 
-/*Profile*/
+/* Styles pour le wrapper de profil */
 .profile-wrapper {
     max-width: 1200px;
     margin: 0 auto;
@@ -436,12 +471,6 @@ body::after {
     overflow: hidden;
 }
 
-.profile-header {
-    background: linear-gradient(to right, #1b2838, #2a475e);
-    padding: 30px;
-    border-bottom: 2px solid var(--accent-color);
-}
-
 .profile-summary {
     display: flex;
     gap: 20px;
@@ -449,13 +478,6 @@ body::after {
 
 .avatar-section {
     position: relative;
-}
-
-.profile-avatar {
-    width: 150px;
-    height: 150px;
-    border: 3px solid var(--accent-color);
-    border-radius: 5px;
 }
 
 .online-status {
@@ -468,7 +490,7 @@ body::after {
     font-size: 0.8em;
     background: #4CAF50;
     color: white;
-    white-space: nowrap; /* Empêche le texte de se couper sur plusieurs lignes */
+    white-space: nowrap;
 }
 
 .profile-details {
@@ -617,38 +639,24 @@ body::after {
     object-fit: cover;
 }
 
-.profile-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-}
-
 .friend-name {
     font-size: 1.2em;
     color: var(--primary-text);
 }
 
 .friends-count {
-    color: #fdd900; /* Couleur différente pour le nombre d'amis */
+    color: var(--accent-color);
     font-weight: bold;
 }
-
-.avatar-section {
-    position: relative;
-    width: fit-content; /* Pour que le conteneur s'ajuste à la taille de l'image */
-}
-
-/********/
 
 .color-picker-modal {
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: #262324;
+    background: var(--primary-bg);
     padding: 20px;
-    border: 2px solid #fdd900;
+    border: 2px solid var(--accent-color);
     border-radius: 10px;
     z-index: 1000;
     display: none;
@@ -687,7 +695,6 @@ body::after {
     margin: 10px 0;
 }
 
-/* Override default color picker styles */
 .color-input::-webkit-color-swatch-wrapper {
     padding: 0;
 }
@@ -696,12 +703,12 @@ body::after {
     border: none;
     border-radius: 5px;
 }
-/***/
+
 .signup-section input[type="file"] {
-    width: 100%; /* Largeur complète du conteneur */
-    max-width: 100%; /* Ne dépasse pas la largeur du parent */
+    width: 100%;
+    max-width: 100%;
     padding: 0.5rem;
-    box-sizing: border-box; /* Inclut le padding dans la largeur */
+    box-sizing: border-box;
     margin-bottom: 1rem;
 }
 
@@ -749,20 +756,20 @@ body::after {
     cursor: not-allowed;
 }
 
-/**/
+/* Styles pour les messages de données manquantes */
+.no-data-message {
+    color: var(--accent-color); /* Utilisez la couleur d'accentuation ou une autre couleur de votre choix */
+    font-size: 1em;
+    text-align: center;
+    margin-top: 1rem;
+}
 
+/* Responsive design */
 @media (max-width: 768px) {
     .profile-content {
         grid-template-columns: 1fr;
     }
-}
 
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
-}
-
-@media (max-width: 768px) {
     .container {
         padding: 1rem;
         margin-top: 60px;
@@ -772,4 +779,10 @@ body::after {
         padding: 0.8rem 1.5rem;
         font-size: 0.7em;
     }
+}
+
+/* Animation */
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
 }

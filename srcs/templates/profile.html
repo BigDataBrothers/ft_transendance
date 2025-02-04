@@ -11,11 +11,11 @@
             <div class="profile-summary">
                 <!-- Avatar Section -->
                 <div class="avatar-section">
-                    <!-- {% if user_profile.profile_photo %} -->
-                        <img src="{{ user_profile.profile_photo.url }}" alt="Avatar" class="profile-avatar">
-                    <!-- {% else %}
-                        <img src="{% static 'images/default.jpg' %}" alt="Default Avatar" class="profile-avatar"> -->
-                    <!-- {% endif %} -->
+                    {% if user_profile.profile_picture %}
+                        <img src="{{ user_profile.profile_picture.url }}" alt="Avatar" class="profile-avatar">
+                    {% else %}
+                        <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="profile-avatar">
+                    {% endif %}
                     <!-- Online Status -->
                     <div class="online-status online">Online</div>
                 </div>
@@ -106,21 +106,24 @@
                 </div>
 
                 <!-- Friends Section -->
+                <!-- Dans votre template profile.html -->
                 <div class="friends-section">
-                    <h3>Friends <span class="friends-count">{{ user_profile.friends.count }}</span></h3>
-                    <div class="friends-list">
-                        {% for friend in user_profile.friends.all %}
+                    <h3>My Friends ({{ user_profile.friends_set.count }})</h3>
+                {% if user_profile.friends_set.all %}
+                    {% for friend in user_profile.friends_set.all %}
                         <div class="friend">
+                            {{ friend.user.username }}
                             {% if friend.profile_picture %}
                                 <img src="{{ friend.profile_picture.url }}" alt="{{ friend.user.username }}" class="friend-avatar">
                             {% else %}
                                 <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="friend-avatar">
                             {% endif %}
-                            <span class="friend-name">{{ friend.user.username }}</span>
                         </div>
-                        {% endfor %}
-                    </div>
+                    {% endfor %}
                 </div>
+                {% else %}
+                <p>Vous n'avez pas encore d'amis.</p>
+                {% endif %}
             </div>
         </div>
     </div>
