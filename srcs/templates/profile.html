@@ -11,8 +11,8 @@
             <div class="profile-summary">
                 <!-- Avatar Section -->
                 <div class="avatar-section">
-                    {% if user_profile.profile_picture %}
-                        <img src="{{ user_profile.profile_picture.url }}" alt="Avatar" class="profile-avatar">
+                    {% if user.profile_photo %}
+                        <img src="{{ user.profile_photo.url }}" alt="Avatar" class="profile-avatar">
                     {% else %}
                         <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="profile-avatar">
                     {% endif %}
@@ -43,8 +43,8 @@
                 <div class="profile-card">
                     <div class="recent-activity">
                         <h3>Recent Activity</h3>
-                        <p>Last played: {{ user_profile.last_played_game }}</p>
-                        <p>Time played: {{ user_profile.time_played }} hrs</p>
+                        <p>Last played: <span class="data">{{ user_profile.last_played_game }}</span></p>
+                        <p>Time played: <span class="data">{{ user_profile.time_played }} hrs</span></p>
                     </div>
                 </div>
 
@@ -92,15 +92,19 @@
 
                 <!-- Achievements Section -->
                 <div class="achievements">
-                    <h3>Recent Achievements</h3>
-                    <div class="achievement-grid">
-                        {% for achievement in user_profile.achievements.all %}
-                        <div class="achievement">
-                            <i class="{{ achievement.icon }}"></i>
-                            <span>{{ achievement.name }}</span>
+                    <h3>Recent Achievements (<span class="data">{{ user_profile.achievements.count }}</span>)</h3>
+                    {% if user_profile.achievements_set.all %}
+                        <div class="achievement-grid">
+                            {% for achievement in user_profile.achievements.all %}
+                            <div class="achievement">
+                                <i class="{{ achievement.icon }}"></i>
+                                <span>{{ achievement.name }}</span>
+                            </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
-                    </div>
+                    {% else %}
+                        <span class="data"><p>You don't have any achievements yet.</p></span>
+                    {% endif %}
                     <!-- Add Achievement Button -->
                     <!-- <a href="{% url 'accounts:add_achievement' %}" class="btn btn-primary">Add Achievement</a> -->
                 </div>
@@ -108,22 +112,22 @@
                 <!-- Friends Section -->
                 <!-- Dans votre template profile.html -->
                 <div class="friends-section">
-                    <h3>My Friends ({{ user_profile.friends_set.count }})</h3>
-                {% if user_profile.friends_set.all %}
-                    {% for friend in user_profile.friends_set.all %}
-                        <div class="friend">
-                            {{ friend.user.username }}
-                            {% if friend.profile_picture %}
-                                <img src="{{ friend.profile_picture.url }}" alt="{{ friend.user.username }}" class="friend-avatar">
-                            {% else %}
-                                <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="friend-avatar">
-                            {% endif %}
-                        </div>
-                    {% endfor %}
+                    <h3>My Friends (<span class="data">{{ user_profile.friends_set.count }}</span>)</h3>
+                    {% if user_profile.friends_set.all %}
+                        {% for friend in user_profile.friends_set.all %}
+                            <div class="friend">
+                                {{ friend.user.username }}
+                                {% if friend.profile_picture %}
+                                    <img src="{{ friend.profile_picture.url }}" alt="{{ friend.user.username }}" class="friend-avatar">
+                                {% else %}
+                                    <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="friend-avatar">
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <span class="data"><p>You don't have any friends yet.</p></span>
+                    {% endif %}
                 </div>
-                {% else %}
-                <p>You don't have any friends yet.</p>
-                {% endif %}
             </div>
         </div>
     </div>
@@ -150,7 +154,7 @@
 
             <!-- Modal Buttons -->
             <div class="modal-buttons">
-                <button onclick="applyGradient()" class="profile-link custom-change-password-btn">
+                <button onclick="applyGradient()" class="profile-link custom-apply-btn">
                     Apply
                 </button>
                 <button onclick="closeColorPicker()" class="profile-link danger">
@@ -167,12 +171,12 @@
             document.getElementById('colorPickerModal').style.display = 'block';
             updatePreview();
         });
-
+    
         // Function to close the color picker
         function closeColorPicker() {
             document.getElementById('colorPickerModal').style.display = 'none';
         }
-
+    
         // Function to update the preview
         function updatePreview() {
             const startColor = document.getElementById('startColor').value;
@@ -180,11 +184,11 @@
             const preview = document.getElementById('gradientPreview');
             preview.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
         }
-
+    
         // Update the preview when the colors change
         document.getElementById('startColor').addEventListener('input', updatePreview);
         document.getElementById('endColor').addEventListener('input', updatePreview);
-
+    
         // Function to apply the gradient
         function applyGradient() {
             const startColor = document.getElementById('startColor').value;
@@ -192,17 +196,32 @@
             const profileHeader = document.querySelector('.profile-header');
             profileHeader.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
             closeColorPicker();
-
-            // Save the preferences in localStorage
-            localStorage.setItem('profileGradientStart', startColor);
-            localStorage.setItem('profileGradientEnd', endColor);
+    
+            // Save the preferences in the database
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch("", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken
+                },
+                body: `startColor=${startColor}&endColor=${endColor}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Colors saved successfully');
+                } else {
+                    console.error('Failed to save colors');
+                }
+            });
         }
-
+    
         // Load the saved preferences on page load
         window.addEventListener('load', () => {
-            const savedStartColor = localStorage.getItem('profileGradientStart');
-            const savedEndColor = localStorage.getItem('profileGradientEnd');
-
+            const savedStartColor = '{{ user_profile.profile_gradient_start }}';
+            const savedEndColor = '{{ user_profile.profile_gradient_end }}';
+    
             if (savedStartColor && savedEndColor) {
                 document.getElementById('startColor').value = savedStartColor;
                 document.getElementById('endColor').value = savedEndColor;
@@ -211,6 +230,9 @@
             }
         });
     </script>
+    
+    
+    
     {% else %}
     <!-- Login Prompt Section -->
     <div class="login-prompt">

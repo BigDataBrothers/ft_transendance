@@ -5,5 +5,5 @@ class AccountsConfig(AppConfig):
     name = 'accounts'
 
     def ready(self):
-        # Importer les signaux pour s'assurer qu'ils sont chargés
-        import accounts.signals
+        import accounts.models
+

@@ -2,6 +2,11 @@ from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
 from .models import Profile, Achievement
+from accounts.models import User
+
+# Register your models here.
+
+admin.site.register(User)
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
@@ -33,7 +38,7 @@ class ProfileAdmin(admin.ModelAdmin):
         """
         Crée un lien cliquable vers la page de l'utilisateur
         """
-        url = reverse('admin:authentification_user_change', args=[obj.user.pk])
+        url = reverse('admin:accounts_user_change', args=[obj.user.pk])
         return format_html('<a href="{}">Voir l\'utilisateur</a>', url)
     user_link.short_description = 'Utilisateur'
     

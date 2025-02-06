@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
-    'authentification'
 ]
 
 MIDDLEWARE = [
@@ -148,7 +147,8 @@ LOGOUT_REDIRECT_URL = "home"
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
-AUTH_USER_MODEL = 'authentification.User'
+AUTH_USER_MODEL = 'accounts.User'
+
 # URL de redirection vers l'autorisation 42
 AUTHORIZE_URL = 'https://api.intra.42.fr/oauth/authorize'
 TOKEN_URL = 'https://api.intra.42.fr/oauth/token'

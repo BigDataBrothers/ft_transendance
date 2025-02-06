@@ -237,9 +237,11 @@ body::after {
 
 .profile-avatar {
     width: 150px;
-    height: 150px;
+    height: auto;
     border: 3px solid var(--accent-color);
     border-radius: 5px;
+    object-fit: cover;
+    
 }
 
 .profile-info h1 {
@@ -565,7 +567,11 @@ body::after {
 }
 
 .custom-change-password-btn {
-    background-color: #262324;
+    background-color: var(--primary-bg);
+}
+
+.custom-apply-btn {
+    background-color: var(--button-bg);
 }
 
 .main-content {
@@ -618,6 +624,10 @@ body::after {
     background: var(--button-bg);
     border-radius: 5px;
     padding: 20px;
+}
+
+.friends-section p {
+    color: var(--accent-color);
 }
 
 .friends-list {
@@ -762,6 +772,10 @@ body::after {
     font-size: 1em;
     text-align: center;
     margin-top: 1rem;
+}
+
+.data {
+    color: var(--accent-color);
 }
 
 /* Responsive design */
