@@ -23,6 +23,12 @@ class Achievement(models.Model):
     def __str__(self):
         return self.name
 
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    type = models.CharField(max_length=20, default='info')
+    created_at = models.DateTimeField(auto_now_add=True)
+
 class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
     level = models.IntegerField(default=0)
@@ -35,6 +41,7 @@ class Profile(models.Model):
     achievements = models.ManyToManyField(Achievement, related_name='profiles')
     profile_gradient_start = models.CharField(max_length=7, default='#1b2838')
     profile_gradient_end = models.CharField(max_length=7, default='#2a475e')
+    notifications = models.ManyToManyField(Notification, blank=True)
 
     def __str__(self):
         return f"Profile de {self.user.username}"

@@ -4,25 +4,29 @@
 {% block content %}
 <div class="container mt-4">
     {% if user.is_authenticated %}
-    <!-- Profile Background Section -->
     <div class="profile-background">
+        <div class="notification-center" id="notificationCenter">
+            <div class="notification-header">
+                <h3>Notifications</h3>
+                <span class="notification-count" id="notificationCount">0</span>
+            </div>
+            <div class="notification-list" id="notificationList">
+                <!-- Les notifications seront ajoutées ici dynamiquement -->
+            </div>
+        </div>
         <!-- Profile Header Section -->
         <div class="profile-header">
             <div class="profile-summary">
-                <!-- Avatar Section -->
                 <div class="avatar-section">
                     {% if user.profile_photo %}
                         <img src="{{ user.profile_photo.url }}" alt="Avatar" class="profile-avatar">
                     {% else %}
                         <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="profile-avatar">
                     {% endif %}
-                    <!-- Online Status -->
                     <div class="online-status online">Online</div>
                 </div>
-                <!-- Profile Details -->
                 <div class="profile-details">
                     <h1>{{ user.username }}</h1>
-                    <!-- Player Level -->
                     <div class="player-level">
                         <span class="level-icon">{{ user_profile.level }}</span>
                         <div class="level-progress">
@@ -39,7 +43,6 @@
         <div class="profile-content">
             <!-- Sidebar Section -->
             <div class="sidebar">
-                <!-- Recent Activity Card -->
                 <div class="profile-card">
                     <div class="recent-activity">
                         <h3>Recent Activity</h3>
@@ -48,18 +51,14 @@
                     </div>
                 </div>
 
-                <!-- Customize Profile Colors Button -->
                 <button id="customizeProfile" class="profile-link custom-change-password-btn" style="margin-top: 10px;">
                     <i class="fas fa-palette"></i> Customize Profile Colors
                 </button>
 
-                <!-- Profile Links Section -->
                 <div class="profile-links">
-                    <!-- Change Password Link -->
                     <a href="{% url 'password_change' %}" class="profile-link custom-change-password-btn">
                         <i class="fas fa-key"></i> Change Password
                     </a>
-                    <!-- Logout Form -->
                     <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
                         <button type="submit" class="profile-link danger">
@@ -71,29 +70,24 @@
 
             <!-- Main Content Section -->
             <div class="main-content">
-                <!-- Stats Showcase Section -->
                 <div class="stats-showcase">
-                    <!-- Stat Card for Games Played -->
                     <div class="stat-card">
                         <h4>Games Played</h4>
                         <span class="stat-value">{{ user_profile.games_played }}</span>
                     </div>
-                    <!-- Stat Card for Win Rate -->
                     <div class="stat-card">
                         <h4>Win Rate</h4>
                         <span class="stat-value">{{ user_profile.win_rate }}%</span>
                     </div>
-                    <!-- Stat Card for Total Score -->
                     <div class="stat-card">
                         <h4>Total Score</h4>
                         <span class="stat-value">{{ user_profile.total_score }}</span>
                     </div>
                 </div>
 
-                <!-- Achievements Section -->
                 <div class="achievements">
                     <h3>Recent Achievements (<span class="data">{{ user_profile.achievements.count }}</span>)</h3>
-                    {% if user_profile.achievements_set.all %}
+                    {% if user_profile.achievements.all %}
                         <div class="achievement-grid">
                             {% for achievement in user_profile.achievements.all %}
                             <div class="achievement">
@@ -105,27 +99,40 @@
                     {% else %}
                         <span class="data"><p>You don't have any achievements yet.</p></span>
                     {% endif %}
-                    <!-- Add Achievement Button -->
-                    <!-- <a href="{% url 'accounts:add_achievement' %}" class="btn btn-primary">Add Achievement</a> -->
                 </div>
 
-                <!-- Friends Section -->
-                <!-- Dans votre template profile.html -->
                 <div class="friends-section">
-                    <h3>My Friends (<span class="data">{{ user_profile.friends_set.count }}</span>)</h3>
-                    {% if user_profile.friends_set.all %}
-                        {% for friend in user_profile.friends_set.all %}
-                            <div class="friend">
-                                {{ friend.user.username }}
-                                {% if friend.profile_picture %}
-                                    <img src="{{ friend.profile_picture.url }}" alt="{{ friend.user.username }}" class="friend-avatar">
-                                {% else %}
-                                    <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="friend-avatar">
-                                {% endif %}
-                            </div>
-                        {% endfor %}
+                    <div class="friends-header">
+                        <h3>My Friends (<span class="data">{{ user_profile.friends.count }}</span>)</h3>
+                        <button id="addFriendButton" class="friend-action-btn">
+                            <i class="fas fa-user-plus"></i> Add Friend
+                        </button>
+                    </div>
+                    {% if user_profile.friends.all %}
+                        <div class="friends-grid">
+                            {% for friend in user_profile.friends.all %}
+                                <div class="friend-card">
+                                    <div class="friend-avatar">
+                                        {% if friend.user.profile_photo %}
+                                            <img src="{{ friend.user.profile_photo.url }}" alt="{{ friend.user.username }}">
+                                        {% else %}
+                                            <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar">
+                                        {% endif %}
+                                    </div>
+                                    <div class="friend-info">
+                                        <span class="friend-name">{{ friend.user.username }}</span>
+                                        <button class="remove-friend-btn" onclick="removeFriend('{{ friend.user.username }}')">
+                                            <i class="fas fa-user-minus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
                     {% else %}
-                        <span class="data"><p>You don't have any friends yet.</p></span>
+                        <span class="data empty-state">
+                            <i class="fas fa-users"></i>
+                            <p>You don't have any friends yet.</p>
+                        </span>
                     {% endif %}
                 </div>
             </div>
@@ -136,68 +143,73 @@
     <div id="colorPickerModal" class="color-picker-modal">
         <div class="color-picker-container">
             <h3 style="color: #fcfcec; margin-bottom: 15px;">Customize Profile Colors</h3>
-
-            <!-- Color Input Group for Start Color -->
             <div class="color-input-group">
                 <label style="color: #fcfcec">Start Color:</label>
                 <input type="color" id="startColor" class="color-input" value="#1b2838">
             </div>
-
-            <!-- Color Input Group for End Color -->
             <div class="color-input-group">
                 <label style="color: #fcfcec">End Color:</label>
                 <input type="color" id="endColor" class="color-input" value="#2a475e">
             </div>
-
-            <!-- Preview Gradient -->
             <div class="preview-gradient" id="gradientPreview"></div>
-
-            <!-- Modal Buttons -->
             <div class="modal-buttons">
-                <button onclick="applyGradient()" class="profile-link custom-apply-btn">
-                    Apply
-                </button>
-                <button onclick="closeColorPicker()" class="profile-link danger">
-                    Cancel
-                </button>
+                <button onclick="applyGradient()" class="profile-link custom-apply-btn">Apply</button>
+                <button onclick="closeColorPicker()" class="profile-link danger">Cancel</button>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript for Color Picker Modal -->
+    <!-- Modal for Adding a Friend -->
+    <div id="addFriendModal" class="friend-modal">
+        <div class="friend-modal-content">
+            <div class="friend-modal-header">
+                <h3>Add a Friend</h3>
+                <button onclick="closeAddFriendModal()" class="close-button">&times;</button>
+            </div>
+            <div class="friend-modal-body">
+                <div class="friend-input-group">
+                    <label for="friendUsername">Username</label>
+                    <input type="text" id="friendUsername" placeholder="Enter friend's username" class="friend-input">
+                </div>
+                <div class="modal-buttons">
+                    <button onclick="addFriend()" class="add-friend-btn">
+                        <i class="fas fa-user-plus"></i> Add Friend
+                    </button>
+                    <button onclick="closeAddFriendModal()" class="cancel-btn">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Function to open the color picker
         document.getElementById('customizeProfile').addEventListener('click', () => {
             document.getElementById('colorPickerModal').style.display = 'block';
             updatePreview();
         });
-    
-        // Function to close the color picker
+
         function closeColorPicker() {
             document.getElementById('colorPickerModal').style.display = 'none';
         }
-    
-        // Function to update the preview
+
         function updatePreview() {
             const startColor = document.getElementById('startColor').value;
             const endColor = document.getElementById('endColor').value;
             const preview = document.getElementById('gradientPreview');
             preview.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
         }
-    
-        // Update the preview when the colors change
+
         document.getElementById('startColor').addEventListener('input', updatePreview);
         document.getElementById('endColor').addEventListener('input', updatePreview);
-    
-        // Function to apply the gradient
+
         function applyGradient() {
             const startColor = document.getElementById('startColor').value;
             const endColor = document.getElementById('endColor').value;
             const profileHeader = document.querySelector('.profile-header');
             profileHeader.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
             closeColorPicker();
-    
-            // Save the preferences in the database
+
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
             fetch("", {
                 method: 'POST',
@@ -216,12 +228,11 @@
                 }
             });
         }
-    
-        // Load the saved preferences on page load
+
         window.addEventListener('load', () => {
             const savedStartColor = '{{ user_profile.profile_gradient_start }}';
             const savedEndColor = '{{ user_profile.profile_gradient_end }}';
-    
+
             if (savedStartColor && savedEndColor) {
                 document.getElementById('startColor').value = savedStartColor;
                 document.getElementById('endColor').value = savedEndColor;
@@ -229,12 +240,132 @@
                     `linear-gradient(to right, ${savedStartColor}, ${savedEndColor})`;
             }
         });
+
+        document.getElementById('addFriendButton').addEventListener('click', () => {
+            document.getElementById('addFriendModal').style.display = 'flex';
+        });
+
+        function closeAddFriendModal() {
+            document.getElementById('addFriendModal').style.display = 'none';
+        }
+
+        function addFriend() {
+            const friendUsername = document.getElementById('friendUsername').value;
+            if (friendUsername.trim() === '') {
+                alert('Please enter a username.');
+                return;
+            }
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch(`/accounts/add_friend/${friendUsername}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken
+                },
+                body: `username=${friendUsername}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Friend added successfully');
+                    location.reload();
+                } else {
+                    console.error('Failed to add friend');
+                }
+            });
+            closeAddFriendModal();
+        }
+
+        // Fermer la modal en cliquant en dehors
+        window.onclick = function(event) {
+            const modal = document.getElementById('addFriendModal');
+            if (event.target === modal) {
+                closeAddFriendModal();
+            }
+        }
+
+        // Fonction pour supprimer un ami
+        function removeFriend(username) {
+            if (!confirm(`Are you sure you want to remove ${username} from your friends?`)) return;
+            
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            fetch(`/accounts/remove_friend/${username}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Supprimer l'ami de la liste sans recharger la page
+                    const friendCard = document.querySelector(`.friend-card[data-username="${username}"]`);
+                    if (friendCard) {
+                        friendCard.remove();
+                    }
+                    // Mettre à jour le compteur d'amis
+                    const friendCount = document.querySelector('.friends-header h3 .data');
+                    if (friendCount) {
+                        friendCount.textContent = parseInt(friendCount.textContent) - 1;
+                    }
+                } else {
+                    alert('Failed to remove friend: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while removing friend');
+            });
+        }
+
+        // Gestion des notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification-item ${type}`;
+            notification.innerHTML = `
+                <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            const notificationList = document.getElementById('notificationList');
+            notificationList.prepend(notification);
+            
+            // Mettre à jour le compteur
+            const count = document.getElementById('notificationCount');
+            count.textContent = parseInt(count.textContent) + 1;
+            
+            // Afficher le centre de notifications
+            document.getElementById('notificationCenter').classList.add('show');
+            
+            // Supprimer après 5 secondes
+            setTimeout(() => {
+                notification.remove();
+                count.textContent = parseInt(count.textContent) - 1;
+                if (notificationList.children.length === 0) {
+                    document.getElementById('notificationCenter').classList.remove('show');
+                }
+            }, 5000);
+        }
+
+        // Modifications du modal d'ajout d'ami
+        document.getElementById('addFriendButton').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.getElementById('addFriendModal').style.display = 'flex';
+        });
+
+        // Fermeture du modal au clic en dehors
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('addFriendModal');
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
     </script>
-    
-    
-    
+
     {% else %}
-    <!-- Login Prompt Section -->
     <div class="login-prompt">
         <h2>Please log in to view your profile</h2>
         <a href="{% url 'login' %}" class="btn">Log In</a>

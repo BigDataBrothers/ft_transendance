@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.http import JsonResponse
 
 import requests
 import secrets
@@ -41,6 +42,7 @@ def profile_view(request):
     context = {
         'user': request.user,
         'user_profile': user_profile,
+        'friends': user_profile.friends.all(),
     }
     return render(request, 'profile.html', context)
 
@@ -77,6 +79,36 @@ def add_friend(request, username):
         messages.error(request, 'Profile not found')
 
     return redirect('profile')
+
+@login_required
+def remove_friend(request, username):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            # Récupérer l'utilisateur correspondant au nom d'utilisateur
+            friend_user = User.objects.get(username=username)
+            # Récupérer le profil de l'ami
+            friend_profile = Profile.objects.get(user=friend_user)
+            # Récupérer le profil de l'utilisateur actuel
+            current_user_profile = request.user.profile
+            # Supprimer l'ami de la liste d'amis
+            current_user_profile.friends.remove(friend_profile)
+            return JsonResponse({'success': True})
+        except User.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'User not found'})
+        except Profile.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Profile not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
+
+@login_required
+def get_notifications(request):
+    notifications = request.user.notifications.all().order_by('-created_at')[:5]
+    return JsonResponse({
+        'notifications': [{
+            'message': notif.message,
+            'type': notif.type,
+            'created_at': notif.created_at.strftime('%Y-%m-%d %H:%M')
+        } for notif in notifications]
+    })
 
 def logout_user(request):
     logout(request)
