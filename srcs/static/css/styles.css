@@ -1,5 +1,5 @@
 /* Variables globales pour les couleurs et les thèmes */
-:root {
+/* :root {
     --primary-bg: #171a21;
     --primary-text: #c6d4df;
     --accent-color: #66c0f4;
@@ -21,32 +21,57 @@
     --input-border-color: rgba(255, 255, 255, 0.1);
     --input-bg-color: rgba(255, 255, 255, 0.05);
     --input-focus-border-color: #66c0f4;
-}
-
-/* Thème sombre */
-[data-theme="dark"] {
-    --primary-bg: #262324;
-    --primary-text: #fcfcec;
-    --accent-color: #fdd900;
-    --highlight-color: #3a3a3a;
-    --button-bg: #2d2d2d;
-    --danger-color: #dc3545;
-    --danger-hover-color: #c82333;
-    --friend-action-bg: linear-gradient(135deg, #66c0f4 0%, #4b91b3 100%);
-    --friend-action-hover-bg: linear-gradient(135deg, #7ccaff 0%, #5da1c4 100%);
-    --modal-bg: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
-    --notification-bg: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
+} */
+:root {
+    --primary-bg: #1b2838;
+    --primary-text: #b8c2cc;
+    --accent-color: #66c0f4;
+    --highlight-color: #2a9d8f;
+    --button-bg: #33415c;
+    --danger-color: #e74c3c;
+    --danger-hover-color: #c0392b;
+    --friend-action-bg: linear-gradient(135deg, #66c0f4 0%, #2a9d8f 100%);
+    --friend-action-hover-bg: linear-gradient(135deg, #7ccaff 0%, #3aa394 100%);
+    --modal-bg: linear-gradient(135deg, #1b2838 0%, #2a415c 100%);
+    --notification-bg: linear-gradient(135deg, #1b2838 0%, #2a415c 100%);
     --notification-count-bg: #66c0f4;
     --empty-state-color: rgba(255, 255, 255, 0.6);
-    --friend-card-bg: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
+    --friend-card-bg: linear-gradient(135deg, #2a415c 0%, #1b2838 100%);
     --friend-avatar-border: #66c0f4;
     --friend-name-color: #fcfcec;
-    --remove-friend-color: #ff4d4d;
-    --remove-friend-hover-color: #ff6666;
+    --remove-friend-color: #e74c3c;
+    --remove-friend-hover-color: #c0392b;
     --input-border-color: rgba(255, 255, 255, 0.1);
     --input-bg-color: rgba(255, 255, 255, 0.05);
     --input-focus-border-color: #66c0f4;
 }
+
+[data-theme="dark"] {
+    --primary-bg: #121212;
+    --primary-text: #e0e0e0;
+    --accent-color: #80d0c7;
+    --highlight-color: #4a4a4a;
+    --button-bg: #303030;
+    --danger-color: #e53935;
+    --danger-hover-color: #d32f2f;
+    --friend-action-bg: linear-gradient(135deg, #80d0c7 0%, #1d3557 100%);
+    --friend-action-hover-bg: linear-gradient(135deg, #9de2d9 0%, #2a415c 100%);
+    --modal-bg: linear-gradient(135deg, #121212 0%, #1e1e1e 100%);
+    --notification-bg: linear-gradient(135deg, #121212 0%, #1e1e1e 100%);
+    --notification-count-bg: #80d0c7;
+    --empty-state-color: rgba(255, 255, 255, 0.5);
+    --friend-card-bg: linear-gradient(135deg, #1e1e1e 0%, #121212 100%);
+    --friend-avatar-border: #80d0c7;
+    --friend-name-color: #e0e0e0;
+    --remove-friend-color: #e53935;
+    --remove-friend-hover-color: #d32f2f;
+    --input-border-color: rgba(255, 255, 255, 0.1);
+    --input-bg-color: rgba(255, 255, 255, 0.05);
+    --input-focus-border-color: #80d0c7;
+}
+
+
+
 
 /* Styles globaux pour le corps de la page */
 body {
@@ -518,13 +543,41 @@ body::after {
     bottom: -10px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 5px 15px;
-    border-radius: 15px;
-    font-size: 0.8em;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
     background: #4CAF50;
+    border: 2px solid white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.online-text {
+    display: none;
+    font-size: 0.5em;
     color: white;
     white-space: nowrap;
+    padding: 0 5px;
 }
+
+.online-status:hover {
+    width: auto;
+    height: auto;
+    padding: 5px 10px;
+    border-radius: 15px;
+    transform: translateX(-50%) scale(1.1);
+}
+
+.online-status:hover .online-text {
+    display: inline-block;
+}
+
+
 
 .profile-details {
     flex-grow: 1;
@@ -652,7 +705,7 @@ body::after {
 }
 
 .friends-section {
-    background: var(--button-bg);
+    background: var(--modal-bg);
     border-radius: 5px;
     padding: 20px;
 }

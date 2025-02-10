@@ -23,7 +23,9 @@
                     {% else %}
                         <img src="{% static 'images/default_avatar.jpg' %}" alt="Default Avatar" class="profile-avatar">
                     {% endif %}
-                    <div class="online-status online">Online</div>
+                    <div class="online-status online">
+                        <span class="online-text">Online</span>
+                    </div>
                 </div>
                 <div class="profile-details">
                     <h1>{{ user.username }}</h1>

@@ -26,7 +26,7 @@ print(f"TEMPLATES DIRS: {[BASE_DIR / 'templates']}")
 # SECRET_KEY = os.environ.get('SECRET_KEY')
 SECRET_KEY = 'django-insecure-ge&!bzmr=3ows=fk$(m5o(iz1o*#$+$*81&ep99r!(1z=abbl^'
 FT_CLIENT_ID = 'u-s4t2ud-b855b6816874401e5044c60fa9f6f223acc039deaf9853f85d6a0a57679c7723'
-FT_CLIENT_SECRET = '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'
+FT_CLIENT_SECRET = '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'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
