@@ -5,59 +5,55 @@
 {% block content %}
 <div class="signup-section">
     <h2>Sign Up</h2>
-    {% if form.errors %}
-        <div class="alert alert-danger">
-            {{ form.errors }}
+    <div id="error-messages" class="alert alert-danger" style="display: none;"></div>
+    <form id="signup-form" enctype="multipart/form-data">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        <div class="form-group">
+            <label for="id_username">Username:</label>
+            <input type="text" name="username" id="id_username" class="form-control" required>
         </div>
-    {% endif %}
-    <form method="post" enctype="multipart/form-data" id="signup-form">
-        {% csrf_token %}
-        {% for field in form %}
-            <div class="form-group">
-                {{ field.label_tag }}
-                {% if field.name == 'avatar' %}
-                    <input type="file" 
-                           class="form-control" 
-                           id="{{ field.id_for_label }}" 
-                           name="{{ field.name }}"
-                           accept="image/*"
-                           onchange="checkAvatar(this)"
-                    >
-                {% else %}
-                    {{ field }}
-                {% endif %}
-                {% if field.help_text %}
-                    <small class="form-text text-muted">{{ field.help_text }}</small>
-                {% endif %}
-            </div>
-        {% endfor %}
-        <button type="submit">Sign Up</button>
+        <div class="form-group">
+            <label for="id_password">Password:</label>
+            <input type="password" name="password" id="id_password" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="id_confirm_password">Confirm Password:</label>
+            <input type="password" name="confirm_password" id="id_confirm_password" class="form-control" required>
+        </div>
+        <div class="form-group">
+            <label for="id_avatar">Avatar:</label>
+            <input type="file" id="id_avatar" name="avatar" class="form-control" accept="image/*" onchange="checkAvatar(this)">
+        </div>
+        <button type="submit" class="btn btn-primary">Sign Up</button>
     </form>
+    <p>Already have an account? <br><a href="#" data-link="/login">Log in here</a>.</p>
 </div>
 
-<script>
-function checkAvatar(input) {
-    if (!input.files || input.files.length === 0) {
-        return;
-    }
 
-    const file = input.files[0];
 
-    // Vérifier le type de fichier
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!validTypes.includes(file.type)) {
-        alert("Veuillez sélectionner un fichier image valide (JPEG, PNG, GIF, WebP)");
-        input.value = ''; // Réinitialiser l'input
-        return;
-    }
+<!-- <script>
+    function checkAvatar(input) {
+        if (!input.files || input.files.length === 0) {
+            return;
+        }
 
-    // Vérifier la taille du fichier (5 Mo max)
-    const maxSize = 5 * 1024 * 1024; // 5 Mo
-    if (file.size > maxSize) {
-        alert("La taille du fichier ne doit pas dépasser 5 Mo");
-        input.value = ''; // Réinitialiser l'input
-        return;
+        const file = input.files[0];
+
+        // Vérifier le type de fichier
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        if (!validTypes.includes(file.type)) {
+            alert("Veuillez sélectionner un fichier image valide (JPEG, PNG, GIF, WebP)");
+            input.value = ''; // Réinitialiser l'input
+            return;
+        }
+
+        // Vérifier la taille du fichier (5 Mo max)
+        const maxSize = 5 * 1024 * 1024; // 5 Mo
+        if (file.size > maxSize) {
+            alert("La taille du fichier ne doit pas dépasser 5 Mo");
+            input.value = ''; // Réinitialiser l'input
+            return;
+        }
     }
-}
-</script>
+</script> -->
 {% endblock %}

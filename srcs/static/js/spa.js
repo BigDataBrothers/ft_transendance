@@ -1,5 +1,18 @@
 // app.js
 
+function checkAvatar(input) {
+    const file = input.files[0];
+    if (file) {
+        const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            alert('Veuillez télécharger une image valide (JPEG, PNG, GIF).');
+            input.value = ''; // Réinitialiser l'input si non valide
+        } else {
+            console.log('Image sélectionnée :', file.name);
+        }
+    }
+}
+
 // ROUTEUR SPA
 const router = {
     routes: {},
@@ -66,27 +79,25 @@ function navigateTo(path) {
 // LOGIN VIA AJAX
 function handleLogin(event) {
     event.preventDefault();
-    console.log("Tentative de login...");
 
     const username = document.querySelector('#id_username').value;
     const password = document.querySelector('#id_password').value;
 
-    fetch('/api/login', {
+    const data = { username, password };
+    const csrftoken = getCookie('csrftoken'); // Récupère le token CSRF
+
+    fetch('/api/login/', {
         method: 'POST',
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
+            'X-CSRFToken': csrftoken // On ajoute le CSRF token ici
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify(data),
     })
-    .then(response => {
-        console.log("Réponse reçue:", response);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log("Données reçues:", data);
         if (data.success) {
-            window.location.href = '/home';
+            window.location.href = '/'; // Redirection vers la home
         } else {
             alert('Identifiants incorrects');
         }
@@ -94,23 +105,66 @@ function handleLogin(event) {
     .catch(error => console.error('Erreur lors du login:', error));
 }
 
+async function updateNavbar() {
+    try {
+        const response = await fetch('/api/check-auth/', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const navbar = document.getElementById('navbar-auth');
+
+            // Met à jour la navbar selon l'état de connexion
+            if (data.is_authenticated) {
+                navbar.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" data-link>Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logout-link">Logout</a>
+                    </li>
+                `;
+                document.getElementById('logout-link').addEventListener('click', handleLogout);
+            } else {
+                navbar.innerHTML = `
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" data-link>Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login" data-link>Login</a>
+                    </li>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour de la navbar:', error.message);
+    }
+}
 
 // LOGOUT VIA AJAX
-function handleLogout(event) {
-    event.preventDefault();
+async function handleLogout(event) {
+    event.preventDefault(); // Empêche le comportement par défaut du lien
+    try {
+        const response = await fetch('/logout/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
 
-    fetch('/logout', {
-        method: 'POST',
-        headers: { 'X-CSRFToken': getCookie('csrftoken') },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = '/login';
+        if (!response.ok) {
+            throw new Error(`Erreur lors du logout : ${response.statusText}`);
         }
-    })
-    .catch(error => console.error('Erreur lors du logout:', error));
+
+        console.log('Déconnexion réussie');
+        await updateNavbar(); // Rafraîchit dynamiquement la navbar
+        window.location.reload();
+    } catch (error) {
+        console.error('Erreur lors du logout:', error.message);
+    }
 }
+
+document.addEventListener('DOMContentLoaded', updateNavbar);
 
 // RÉCUPÉRER LE COOKIE CSRF
 function getCookie(name) {
@@ -121,7 +175,7 @@ function getCookie(name) {
 
 // CHARGER DYNAMIQUEMENT LA PAGE D'ACCUEIL
 function loadHomePage() {
-    fetch('/api/home')
+    fetch('/api/home/')
     .then(response => response.json())
     .then(data => {
         console.log('Données reçues:', data);
@@ -130,35 +184,118 @@ function loadHomePage() {
     .catch(error => console.error('Erreur lors du fetch:', error));
 }
 
-// function loadLoginPage() {
-//     console.log("Chargement de la page login...");
-//     fetch('/login')
-//     .then(response => response.text())
-//     .then(html => {
-//         document.querySelector('#app').innerHTML = html;
-//         console.log("HTML injecté dans #app");
-        
-//         // Inspecter le contenu HTML pour déboguer
-//         console.log("Contenu HTML chargé:", document.querySelector('#app').innerHTML);
-        
-//         setTimeout(() => {
-//             const loginForm = document.querySelector('#login-form');
-//             console.log("Formulaire de login trouvé?", !!loginForm);
-//             if (loginForm) {
-//                 loginForm.addEventListener('submit', handleLogin);
-//                 console.log("Event listener ajouté au formulaire");
-//             } else {
-//                 // Essayer d'autres sélecteurs possibles
-//                 const otherForms = document.querySelectorAll('form');
-//                 console.log("Autres formulaires trouvés:", otherForms.length);
-//                 otherForms.forEach((form, index) => {
-//                     console.log(`Formulaire ${index}:`, form.id || 'sans id');
-//                 });
-//             }
-//         }, 100);
-//     })
-//     .catch(error => console.error('Erreur lors du chargement de la page de login:', error));
-// }
+function loadSignUpPage() {
+    console.log("Chargement de la page d'inscription...");
+
+    const csrfToken = getCookie('csrftoken');
+
+    const signUpHTML = `
+    <div class="signup-section">
+        <h2>Sign Up</h2>
+        <div id="error-messages" class="alert alert-danger" style="display: none;"></div>
+        <form id="signup-form" enctype="multipart/form-data">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <div class="form-group">
+                <label for="id_username">Username:</label>
+                <input type="text" name="username" id="id_username" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="id_email">Email:</label>
+                <input type="email" name="email" id="id_email" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="id_profile_photo">Profile Photo:</label>
+                <input type="file" id="id_profile_photo" name="profile_photo" class="form-control" accept="image/*" required>
+            </div>
+            <div class="form-group">
+                <label for="id_first_name">First Name:</label>
+                <input type="text" name="first_name" id="id_first_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="id_last_name">Last Name:</label>
+                <input type="text" name="last_name" id="id_last_name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="id_password">Password:</label>
+                <input type="password" name="password" id="id_password" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="id_confirm_password">Confirm Password:</label>
+                <input type="password" name="confirm_password" id="id_confirm_password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Sign Up</button>
+        </form>
+        <p>Already have an account? <br><a href="#" data-link="/login">Log in here</a>.</p>
+    </div>
+`;
+
+    document.querySelector('#app').innerHTML = signUpHTML;
+
+    const signUpForm = document.querySelector('#signup-form');
+    if (signUpForm) {
+        signUpForm.addEventListener('submit', handleSignUp);
+        console.log("Event listener ajouté au formulaire d'inscription");
+    } else {
+        console.error("Formulaire d'inscription non trouvé après injection");
+    }
+
+    // Attacher l'événement onchange pour l'avatar après l'injection
+    const avatarInput = document.querySelector('#id_avatar');
+    if (avatarInput) {
+        avatarInput.addEventListener('change', function() {
+            checkAvatar(avatarInput);
+        });
+    } else {
+        console.error("Champ Avatar non trouvé après injection");
+    }
+}
+
+const avatarInput = document.querySelector('#id_avatar');
+if (avatarInput) {
+    avatarInput.addEventListener('change', () => checkAvatar(avatarInput));
+}
+
+
+async function handleSignUp(event) {
+    event.preventDefault();
+
+    const form = document.querySelector('#signup-form');
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch('/api/signup/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken') // Assure-toi que cette fonction récupère bien le token
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            alert('Inscription réussie !');
+            window.location.href = data.redirect_url;  // Redirection automatique
+        } else {
+            const errorData = await response.json();
+            document.getElementById('error-messages').style.display = 'block';
+            document.getElementById('error-messages').innerText = errorData.detail || 'Erreur inconnue';
+        }
+    } catch (error) {
+        console.error("Erreur lors de l'inscription :", error);
+        alert('Une erreur est survenue lors de l\'inscription.');
+    }
+}
+
+// Ajout de l'écouteur d'événement sur le formulaire
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('signup-form').addEventListener('submit', handleSignUp);
+});
+// Attacher la fonction au formulaire
+// document.querySelector('#signup-form').addEventListener('submit', handleSignUp);
+
+
+
+
 function loadLoginPage() {
     console.log("Chargement de la page login...");
     
@@ -226,6 +363,8 @@ document.querySelector('#login-form')?.addEventListener('submit', handleLogin);
 // DÉFINIR LES ROUTES
 router.on('/', loadHomePage);
 router.on('/login', loadLoginPage);
+router.on('/signup', loadSignUpPage);
+
 
 // DÉMARRER LE ROUTEUR
 router.start();
@@ -305,3 +444,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tester le cookie CSRF
     console.log("CSRF Token présent?", !!getCookie('csrftoken'));
 });
+
+console.log("Token CSRF:", getCookie('csrftoken'));
+
+function showNotification(message, type) {
+    const notificationContainer = document.createElement('div');
+    notificationContainer.classList.add('notification', type);
+    notificationContainer.textContent = message;
+    
+    // Ajoute la notification au DOM
+    document.body.appendChild(notificationContainer);
+    
+    // Retire la notification après 5 secondes
+    setTimeout(() => notificationContainer.remove(), 5000);
+}
+
+console.log(FormData);
+
+console.log(signUpForm);

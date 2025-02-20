@@ -10,6 +10,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.contrib.auth.forms import AuthenticationForm
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.core.files.storage import default_storage
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 
 import requests
 import secrets
@@ -155,25 +160,6 @@ def api_home(request):
         return JsonResponse(data)
 
 
-# def login_view(request):
-#     if request.method == 'POST':
-#         # Récupérer les informations du formulaire
-#         username = request.POST['username']
-#         password = request.POST['password']
-
-#         # Vérifier les informations d'identification
-#         user = authenticate(request, username=username, password=password)
-
-#         if user is not None:
-#             # Si l'utilisateur est trouvé et authentifié
-#             login(request, user)  # Connecte l'utilisateur
-#             return redirect('home')  # Redirige vers la page d'accueil après connexion
-#         else:
-#             # Si l'authentification échoue
-#             return render(request, 'login.html', {'error': 'Identifiants incorrects.'})
-
-#     # Si la méthode est GET, afficher le formulaire de connexion
-#     return render(request, 'accounts/login.html')
 def login_view(request):
     if request.headers.get('HX-Request') or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render(request, 'accounts/login.html')  # Retourne juste le contenu HTML
@@ -181,6 +167,7 @@ def login_view(request):
 
 
 # Extrait de views.py
+@csrf_exempt
 def api_login(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -194,27 +181,13 @@ def api_login(request):
         return JsonResponse({'success': False, 'error': 'Invalid credentials'})
 
     return JsonResponse({'error': 'Invalid method'}, status=405)
-# def login_api(request):
-#     if request.method == 'POST':
-#         data = json.loads(request.body)
-#         username = data.get('username')
-#         password = data.get('password')
 
-#         user = authenticate(request, username=username, password=password)
-
-#         if user is not None:
-#             login(request, user)
-#             return JsonResponse({'success': True, 'redirect_url': '/home'})
-#         else:
-#             return JsonResponse({'success': False, 'message': 'Invalid credentials'}, status=400)
-
-#     return JsonResponse({'success': False, 'message': 'Only POST method allowed'}, status=405)
-
+@csrf_exempt
 def logout_user(request):
-    """Logout via API (AJAX)"""
-    logout(request)
-    messages.success(request, 'You have been successfully logged out.')
-    return JsonResponse({'success': True})
+    if request.method == 'POST':
+        logout(request)
+        return JsonResponse({'success': True, 'message': 'Déconnexion réussie'})
+    return JsonResponse({'error': 'Méthode non autorisée'}, status=405)
 
 def login_page(request):
     form = LoginForm()
@@ -237,17 +210,45 @@ def login_page(request):
         request, 'accounts/login.html', context={'form': form}
     )
 
-def signup_page(request):
-    form = SignupForm()
-    if request.method == 'POST':
-        form = SignupForm(request.POST, request.FILES)
-        if form.is_valid():
-            user = form.save()
-            Profile.objects.create(user=user)
-            login(request, user)
-            messages.success(request, 'Your account has been created successfully.')
-            return redirect('login')
-    return render(request, 'accounts/signup.html', context={'form': form})
+@csrf_exempt
+@require_POST
+def signup_view(request):
+    username = request.POST.get('username')
+    email = request.POST.get('email')
+    first_name = request.POST.get('first_name')
+    last_name = request.POST.get('last_name')
+    password = request.POST.get('password')
+    confirm_password = request.POST.get('confirm_password')
+    avatar = request.FILES.get('profile_photo')
+
+    if password != confirm_password:
+        return JsonResponse({'detail': 'Les mots de passe ne correspondent pas.'}, status=400)
+
+    if User.objects.filter(username=username).exists():
+        return JsonResponse({'detail': 'Nom d\'utilisateur déjà pris.'}, status=400)
+
+    user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
+
+    if avatar:
+        filename = default_storage.save(f'avatars/{user.username}/{avatar.name}', avatar)
+        print("Avatar sauvegardé à :", filename)
+
+    return JsonResponse({'detail': 'Inscription réussie !', 'redirect_url': reverse_lazy('login')}, status=201)
+
+# def signup(request):
+#     if request.method == 'POST':
+#         form = SignupForm(request.POST, request.FILES)  # Assurez-vous que request.FILES est inclus pour les fichiers
+#         if form.is_valid():
+#             # Créer un nouvel utilisateur
+#             user = form.save(commit=False)
+#             user.set_password(form.cleaned_data['password1'])  # Gère le mot de passe
+#             user.save()
+            
+#             return JsonResponse({'success': True, 'message': 'Inscription réussie!'})
+#         else:
+#             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+#     return JsonResponse({'success': False, 'errors': 'Méthode de requête invalide'}, status=400)
+
 
 def generate_random_state():
     return secrets.token_urlsafe(32)
@@ -386,3 +387,6 @@ def profile_vue(request):
 
 def login_vue(request):
     return render(request, 'login.html')
+
+def api_check_auth(request):
+    return JsonResponse({'is_authenticated': request.user.is_authenticated})

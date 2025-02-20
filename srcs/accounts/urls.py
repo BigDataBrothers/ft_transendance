@@ -10,7 +10,7 @@ from . import views
 app_name = 'accounts'
 
 urlpatterns = [
-    path("signup/", accounts.views.signup_page, name="signup"),
+    # path("signup/", accounts.views.signup_page, name="signup"),
     path("profile/", profile_view, name="profile"),
     path("add_achievement/", add_achievement, name="add_achievement"),
     path('api/', accounts.views.initiate_42_auth, name='api'),
