@@ -9,10 +9,12 @@ from django.contrib.auth import login, authenticate, logout
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
+from django.contrib.auth.forms import AuthenticationForm
 
 import requests
 import secrets
 import uuid
+import json
 
 from .models import Profile, Achievement
 from .forms import AchievementForm, LoginForm, SignupForm
@@ -110,10 +112,109 @@ def get_notifications(request):
         } for notif in notifications]
     })
 
+def home(request):
+    return render(request, 'home.html')
+
+def api_home(request):
+    """Retourne les données de la page d'accueil pour la SPA."""
+    
+    if request.user.is_authenticated:
+        # Données pour un utilisateur connecté
+        user_profile = {
+            "games_played": 42,
+            "win_rate": 75.3
+        }
+
+        featured_games = [
+            {"title": "Game 1", "image": "/static/images/game1.jpg"},
+            {"title": "Game 2", "image": "/static/images/game2.jpg"},
+            {"title": "Game 3", "image": "/static/images/game3.jpg"}
+        ]
+
+        recent_activity = [
+            {"user": "User1", "action": "achieved a new high score in Game 1."},
+            {"user": "User2", "action": "completed all levels in Game 2."},
+            {"user": "User3", "action": "joined the platform."}
+        ]
+
+        data = {
+            "is_authenticated": True,
+            "username": request.user.username,
+            "user_profile": user_profile,
+            "featured_games": featured_games,
+            "recent_activity": recent_activity
+        }
+        return JsonResponse(data)
+    
+    else:
+        # Si l'utilisateur n'est pas connecté, renvoyer un message d'erreur ou un message standard
+        data = {
+            "is_authenticated": False,
+            "message": "You are not logged in. Log in here."
+        }
+        return JsonResponse(data)
+
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         # Récupérer les informations du formulaire
+#         username = request.POST['username']
+#         password = request.POST['password']
+
+#         # Vérifier les informations d'identification
+#         user = authenticate(request, username=username, password=password)
+
+#         if user is not None:
+#             # Si l'utilisateur est trouvé et authentifié
+#             login(request, user)  # Connecte l'utilisateur
+#             return redirect('home')  # Redirige vers la page d'accueil après connexion
+#         else:
+#             # Si l'authentification échoue
+#             return render(request, 'login.html', {'error': 'Identifiants incorrects.'})
+
+#     # Si la méthode est GET, afficher le formulaire de connexion
+#     return render(request, 'accounts/login.html')
+def login_view(request):
+    if request.headers.get('HX-Request') or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'accounts/login.html')  # Retourne juste le contenu HTML
+    return render(request, 'base.html')  # Sinon, charge tout le template avec base.html
+
+
+# Extrait de views.py
+def api_login(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        username = data.get('username')
+        password = data.get('password')
+
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return JsonResponse({'success': True})
+        return JsonResponse({'success': False, 'error': 'Invalid credentials'})
+
+    return JsonResponse({'error': 'Invalid method'}, status=405)
+# def login_api(request):
+#     if request.method == 'POST':
+#         data = json.loads(request.body)
+#         username = data.get('username')
+#         password = data.get('password')
+
+#         user = authenticate(request, username=username, password=password)
+
+#         if user is not None:
+#             login(request, user)
+#             return JsonResponse({'success': True, 'redirect_url': '/home'})
+#         else:
+#             return JsonResponse({'success': False, 'message': 'Invalid credentials'}, status=400)
+
+#     return JsonResponse({'success': False, 'message': 'Only POST method allowed'}, status=405)
+
 def logout_user(request):
+    """Logout via API (AJAX)"""
     logout(request)
     messages.success(request, 'You have been successfully logged out.')
-    return redirect('home')
+    return JsonResponse({'success': True})
 
 def login_page(request):
     form = LoginForm()
@@ -275,3 +376,13 @@ def save_profile_colors(request):
             return JsonResponse({'success': True})
 
     return JsonResponse({'success': False})
+
+
+def home_vue(request):
+    return render(request, 'home.html')
+
+def profile_vue(request):
+    return render(request, 'profile.html')
+
+def login_vue(request):
+    return render(request, 'login.html')

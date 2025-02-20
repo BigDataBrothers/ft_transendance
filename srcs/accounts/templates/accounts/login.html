@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Log In{% endblock %}
 
 {% block content %}
 <div class="login-section">
     <h2>Log In</h2>
-    <form method="post">
+    <form id="login-form" method="POST" action="{% url 'login' %}">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Log In</button>
-    </form>
-    <p>Don't have an account? <br><a href="{% url 'accounts:signup' %}">Sign up here</a>.</p>
-    <p>Connect 42 <a href="{% url 'accounts:api' %}">Connect Here !</a></p>
+        <button type="submit">Login</button>
+    </form>    
+    <p>Don't have an account? <br><a href="{% url 'accounts:signup' %}" data-link>Sign up here</a>.</p>
+    <p>Connect 42 <a href="{% url 'accounts:api' %}" data-link>Connect Here!</a></p>
 </div>
 {% endblock %}
