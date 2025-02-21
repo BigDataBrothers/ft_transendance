@@ -6,7 +6,7 @@ function checkAvatar(input) {
         const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
         if (!validTypes.includes(file.type)) {
             alert('Veuillez télécharger une image valide (JPEG, PNG, GIF).');
-            input.value = ''; // Réinitialiser l'input si non valide
+            input.value = '';
         } else {
             console.log('Image sélectionnée :', file.name);
         }
@@ -18,13 +18,11 @@ const router = {
     routes: {},
 
     on(path, handler) {
-        // Normaliser le chemin (supprimer le slash final si présent)
         const normalizedPath = path.endsWith('/') ? path.slice(0, -1) : path;
         this.routes[normalizedPath] = handler;
     },
 
     navigate(path) {
-        // Normaliser le chemin pour la recherche
         const normalizedPath = path.endsWith('/') ? path.slice(0, -1) : path;
         if (this.routes[normalizedPath]) {
             window.history.pushState({}, '', path);
@@ -35,18 +33,13 @@ const router = {
     },
 
     start() {
-        console.log('Router started. Path:', window.location.pathname);
-    
         window.addEventListener('popstate', () => {
             const currentPath = window.location.pathname;
             const normalizedPath = currentPath.endsWith('/') ? currentPath.slice(0, -1) : currentPath;
             
-            console.log('Popstate triggered:', currentPath, 'Normalized:', normalizedPath);
-            
             if (this.routes[normalizedPath]) {
                 this.routes[normalizedPath]();
             } else {
-                console.warn(`Route non trouvée: ${currentPath}, redirection vers /`);
                 this.navigate('/');
             }
         });
@@ -57,14 +50,13 @@ const router = {
         if (this.routes[normalizedInitialPath]) {
             this.routes[normalizedInitialPath]();
         } else {
-            console.warn(`Route initiale non trouvée: ${initialPath}, redirection vers /`);
             this.navigate('/');
         }
     }
 };
 
 document.addEventListener('click', function(event) {
-    const link = event.target.closest('a[data-link]'); // Prend uniquement les liens avec `data-link`
+    const link = event.target.closest('a[data-link]');
     if (link) {
         event.preventDefault();
         const path = link.getAttribute('href');
@@ -82,22 +74,20 @@ function handleLogin(event) {
 
     const username = document.querySelector('#id_username').value;
     const password = document.querySelector('#id_password').value;
-
-    const data = { username, password };
-    const csrftoken = getCookie('csrftoken'); // Récupère le token CSRF
+    const csrftoken = getCookie('csrftoken');
 
     fetch('/api/login/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken // On ajoute le CSRF token ici
+            'X-CSRFToken': csrftoken
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ username, password }),
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            window.location.href = '/'; // Redirection vers la home
+            window.location.href = '/';
         } else {
             alert('Identifiants incorrects');
         }
@@ -116,7 +106,6 @@ async function updateNavbar() {
             const data = await response.json();
             const navbar = document.getElementById('navbar-auth');
 
-            // Met à jour la navbar selon l'état de connexion
             if (data.is_authenticated) {
                 navbar.innerHTML = `
                     <li class="nav-item">
@@ -145,20 +134,26 @@ async function updateNavbar() {
 
 // LOGOUT VIA AJAX
 async function handleLogout(event) {
-    event.preventDefault(); // Empêche le comportement par défaut du lien
+    if (event && event.preventDefault) {
+        event.preventDefault();
+    }
+    
     try {
+        const csrftoken = getCookie('csrftoken');
         const response = await fetch('/logout/', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
         });
 
         if (!response.ok) {
             throw new Error(`Erreur lors du logout : ${response.statusText}`);
         }
 
-        console.log('Déconnexion réussie');
-        await updateNavbar(); // Rafraîchit dynamiquement la navbar
-        window.location.reload();
+        await updateNavbar();
+        window.location.href = '/';  // Rediriger vers la page d'accueil après logout
     } catch (error) {
         console.error('Erreur lors du logout:', error.message);
     }
@@ -178,15 +173,12 @@ function loadHomePage() {
     fetch('/api/home/')
     .then(response => response.json())
     .then(data => {
-        console.log('Données reçues:', data);
         document.querySelector('#app').innerHTML = generateHomePageContent(data);
     })
     .catch(error => console.error('Erreur lors du fetch:', error));
 }
 
 function loadSignUpPage() {
-    console.log("Chargement de la page d'inscription...");
-
     const csrfToken = getCookie('csrftoken');
 
     const signUpHTML = `
@@ -227,34 +219,18 @@ function loadSignUpPage() {
         </form>
         <p>Already have an account? <br><a href="#" data-link="/login">Log in here</a>.</p>
     </div>
-`;
+    `;
 
     document.querySelector('#app').innerHTML = signUpHTML;
-
-    const signUpForm = document.querySelector('#signup-form');
-    if (signUpForm) {
-        signUpForm.addEventListener('submit', handleSignUp);
-        console.log("Event listener ajouté au formulaire d'inscription");
-    } else {
-        console.error("Formulaire d'inscription non trouvé après injection");
-    }
-
-    // Attacher l'événement onchange pour l'avatar après l'injection
-    const avatarInput = document.querySelector('#id_avatar');
+    document.querySelector('#signup-form').addEventListener('submit', handleSignUp);
+    
+    const avatarInput = document.querySelector('#id_profile_photo');
     if (avatarInput) {
         avatarInput.addEventListener('change', function() {
             checkAvatar(avatarInput);
         });
-    } else {
-        console.error("Champ Avatar non trouvé après injection");
     }
 }
-
-const avatarInput = document.querySelector('#id_avatar');
-if (avatarInput) {
-    avatarInput.addEventListener('change', () => checkAvatar(avatarInput));
-}
-
 
 async function handleSignUp(event) {
     event.preventDefault();
@@ -266,7 +242,7 @@ async function handleSignUp(event) {
         const response = await fetch('/api/signup/', {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCookie('csrftoken') // Assure-toi que cette fonction récupère bien le token
+                'X-CSRFToken': getCookie('csrftoken')
             },
             body: formData
         });
@@ -274,7 +250,7 @@ async function handleSignUp(event) {
         if (response.ok) {
             const data = await response.json();
             alert('Inscription réussie !');
-            window.location.href = data.redirect_url;  // Redirection automatique
+            window.location.href = data.redirect_url;
         } else {
             const errorData = await response.json();
             document.getElementById('error-messages').style.display = 'block';
@@ -286,23 +262,241 @@ async function handleSignUp(event) {
     }
 }
 
-// Ajout de l'écouteur d'événement sur le formulaire
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('signup-form').addEventListener('submit', handleSignUp);
-});
-// Attacher la fonction au formulaire
-// document.querySelector('#signup-form').addEventListener('submit', handleSignUp);
+async function loadProfilePage() {
+    try {
+        const response = await fetch('/api/profile/');
+        if (!response.ok) throw new Error('Failed to fetch profile data');
 
+        const data = await response.json();
 
+        if (data.is_authenticated) {
+            document.querySelector('#app').innerHTML = generateProfileContent(data);
+        } else {
+            document.querySelector('#app').innerHTML = '<h2>Please log in to view your profile</h2>';
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+    }
+}
 
+function generateProfileContent(data) {
+    const html = `
+    <div class="container mt-4">
+        <div class="profile-background">
+            <div class="notification-center" id="notificationCenter">
+                <div class="notification-header">
+                    <h3>Notifications</h3>
+                    <span class="notification-count" id="notificationCount">${data.notifications.length}</span>
+                </div>
+                <div class="notification-list" id="notificationList">
+                    ${data.notifications.map(notification => `
+                        <div class="notification-item ${notification.type}">
+                            <i class="fas ${notification.type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+                            <span>${notification.message}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
+            <!-- Profile Header Section -->
+            <div class="profile-header" style="background: linear-gradient(to right, ${data.profile_gradient_start}, ${data.profile_gradient_end});">
+                <div class="profile-summary">
+                    <div class="avatar-section">
+                        <img src="${data.profile_photo || '/static/images/default_avatar.jpg'}" alt="Avatar" class="profile-avatar">
+                        <div class="online-status online">
+                            <span class="online-text">Online</span>
+                        </div>
+                    </div>
+                    <div class="profile-details">
+                        <h1>${data.username}</h1>
+                        <div class="player-level">
+                            <span class="level-icon">${data.level}</span>
+                            <div class="level-progress">
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" style="width: ${data.win_rate}%">${data.win_rate}%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Content -->
+            <div class="profile-content">
+                <!-- Sidebar Section -->
+                <div class="sidebar">
+                    <div class="profile-card">
+                        <div class="recent-activity">
+                            <h3>Recent Activity</h3>
+                            <p>Last played: <span class="data">${data.last_played_game || 'N/A'}</span></p>
+                            <p>Time played: <span class="data">${data.time_played} hrs</span></p>
+                        </div>
+                    </div>
+                    <button id="customizeProfile" class="profile-link custom-change-password-btn" style="margin-top: 10px;">
+                        <i class="fas fa-palette"></i> Customize Profile Colors
+                    </button>
+                    <div class="profile-links">
+                        <a href="/accounts/password_change/" class="profile-link custom-change-password-btn">
+                            <i class="fas fa-key"></i> Change Password
+                        </a>
+                        <button class="profile-link danger" id="logoutButton">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Main Content Section -->
+                <div class="main-content">
+                    <div class="stats-showcase">
+                        <div class="stat-card"><h4>Games Played</h4><span class="stat-value">${data.games_played}</span></div>
+                        <div class="stat-card"><h4>Win Rate</h4><span class="stat-value">${data.win_rate}%</span></div>
+                        <div class="stat-card"><h4>Total Score</h4><span class="stat-value">${data.total_score}</span></div>
+                    </div>
+
+                    <div class="achievements">
+                        <h3>Recent Achievements (<span class="stat-value">${data.achievements.length}</span>)</h3>
+                        <div class="achievement-grid">
+                            ${data.achievements.map(ach => `
+                                <div class="achievement">
+                                    <i class="${ach.icon}"></i>
+                                    <span>${ach.name}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="friends-section">
+                        <h3>My Friends (<span class="stat-value">${data.friends.length}</span>)</h3>
+                        <div class="friends-grid">
+                            ${data.friends.map(friend => `
+                                <div class="friend-card">
+                                    <div class="friend-avatar">
+                                        <img src="${friend.profile_photo || '/static/images/default_avatar.jpg'}" alt="${friend.username}">
+                                    </div>
+                                    <div class="friend-info">
+                                        <span class="friend-name">${friend.username}</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div id="colorPickerModal" class="color-picker-modal">
+                        <div class="color-picker-container">
+                            <h3 style="color: #fcfcec; margin-bottom: 15px;">Customize Profile Colors</h3>
+                            <div class="color-input-group">
+                                <label style="color: #fcfcec">Start Color:</label>
+                                <input type="color" id="startColor" class="color-input" value="#1b2838">
+                            </div>
+                            <div class="color-input-group">
+                                <label style="color: #fcfcec">End Color:</label>
+                                <input type="color" id="endColor" class="color-input" value="#2a475e">
+                            </div>
+                            <div class="preview-gradient" id="gradientPreview"></div>
+                           <div class="modal-buttons">
+                                <button id="applyGradientBtn" class="profile-link custom-apply-btn">Apply</button>
+                                <button id="cancelColorPickerBtn" class="profile-link danger">Cancel</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    document.addEventListener('click', (event) => {
+        if (event.target.closest('#customizeProfile')) {
+            const modal = document.getElementById('colorPickerModal');
+            modal.style.display = 'block';
+            
+            const startColorInput = document.getElementById('startColor');
+            const endColorInput = document.getElementById('endColor');
+            
+            if (startColorInput && endColorInput) {
+                const updatePreview = () => {
+                    const startColor = startColorInput.value;
+                    const endColor = endColorInput.value;
+                    document.getElementById('gradientPreview').style.background = 
+                        `linear-gradient(to right, ${startColor}, ${endColor})`;
+                };
+                
+                updatePreview();
+                
+                startColorInput.addEventListener('input', updatePreview);
+                endColorInput.addEventListener('input', updatePreview);
+                
+                document.querySelector('.custom-apply-btn')?.addEventListener('click', () => {
+                    const startColor = startColorInput.value;
+                    const endColor = endColorInput.value;
+                    
+                    const profileHeader = document.querySelector('.profile-header');
+                    profileHeader.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
+                    
+                    saveProfileColors(startColor, endColor);
+                    modal.style.display = 'none';
+                });
+                
+                document.querySelector('.modal-buttons .danger')?.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+            }
+        }
+    });
+
+    setTimeout(() => {
+        // Ajouter l'écouteur d'événement au bouton de logout dans le profil
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', handleLogout);
+        }
+    }, 0);
+
+    return html;
+}
+
+function updatePreview() {
+    const startColor = document.getElementById('startColor').value;
+    const endColor = document.getElementById('endColor').value;
+    document.getElementById('gradientPreview').style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
+}
+
+function closeColorPicker() {
+    document.getElementById('colorPickerModal').style.display = 'none';
+}
+
+function applyGradient() {
+    const startColor = document.getElementById('startColor').value;
+    const endColor = document.getElementById('endColor').value;
+
+    const profileHeader = document.querySelector('.profile-header');
+    profileHeader.style.background = `linear-gradient(to right, ${startColor}, ${endColor})`;
+
+    saveProfileColors(startColor, endColor);
+    closeColorPicker();
+}
+
+function saveProfileColors(startColor, endColor) {
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    fetch('/api/profile/colors/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken
+        },
+        body: JSON.stringify({ startColor, endColor })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Colors updated successfully');
+        }
+    })
+    .catch(error => console.error('Error saving colors:', error));
+}
 
 function loadLoginPage() {
-    console.log("Chargement de la page login...");
-    
-    // Récupérer d'abord le token CSRF
     const csrfToken = getCookie('csrftoken');
     
-    // Générer le HTML du formulaire de login
     const loginHTML = `
         <div class="login-section">
             <h2>Log In</h2>
@@ -319,68 +513,102 @@ function loadLoginPage() {
                 <button type="submit" class="btn btn-primary">Login</button>
             </form>    
             <p>Don't have an account? <br><a href="/signup" data-link>Sign up here</a>.</p>
-            <p>Connect 42 <a href="/api" data-link>Connect Here!</a></p>
+            <p>Connect with 42: <a href="/api/42/" id="connect-42-link">Connect Here!</a></p>
         </div>
     `;
-    
-    // Injecter le HTML dans le conteneur de l'application
+
     document.querySelector('#app').innerHTML = loginHTML;
     
-    // Attacher l'événement de soumission
-    const loginForm = document.querySelector('#login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-        console.log("Event listener ajouté au formulaire de login");
-    } else {
-        console.error("Formulaire de login non trouvé après injection");
-    }
+    document.addEventListener('click', function (event) {
+        const link = event.target.closest('#connect-42-link');
+        if (link) {
+            event.preventDefault();
+            window.location.href = '/api/42/';
+        }
+    });
+    
+    document.querySelector('#login-form').addEventListener('submit', handleLogin);
 }
 
 function generateHomePageContent(data) {
-    return data.is_authenticated ? `
-        <h2>Welcome, ${data.username}</h2>
-        <div>Games Played: ${data.user_profile.games_played}</div>
-        <div>Win Rate: ${data.user_profile.win_rate}%</div>
-        <div>Featured Games:</div>
-        <ul>
-            ${data.featured_games.map(game => `<li><a href="${game.url}">${game.title}</a></li>`).join('')}
-        </ul>
-    ` : `
-        <div class="login-prompt card mb-4 shadow">
-            <div class="card-body">
-                <h2 class="card-title">Please log in to access all features</h2>
-                <a class="nav-link btn btn-primary" href="/login" data-link >Log In</a>
-                <a href="{% url 'accounts:signup' %}" class="nav-link btn btn-secondary">Sign Up</a>
-            </div>
-        </div>
-    `;
-}
+    if (data.is_authenticated) {
+        return `
+            <div class="container mt-4">
+                <!-- Section Utilisateur Connecté -->
+                <div class="user-info card mb-4 shadow">
+                    <div class="card-body text-center">
+                        <h2 class="card-title">Welcome, ${data.username}!</h2>
+                        <p class="card-text">
+                            You have played <strong>${data.user_profile.games_played}</strong> games and achieved a win rate of <strong>${data.user_profile.win_rate}%</strong>.
+                        </p>
+                        <a href="/profile" class="btn btn-primary" data-link>View Your Profile</a>
+                    </div>
+                </div>
 
-// ATTACHER LES ÉVÉNEMENTS SEULEMENT SI LES ÉLÉMENTS EXISTENT
-document.querySelector('#logout-link')?.addEventListener('click', handleLogout);
-document.querySelector('#login-form')?.addEventListener('submit', handleLogin);
+                <!-- Section Jeux Populaires -->
+                <div class="featured-games card mb-4 shadow">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Featured Games</h2>
+                        <div class="row">
+                            ${data.featured_games.map(game => `
+                                <div class="col-md-4 mb-4">
+                                    <div class="card h-100 shadow-sm">
+                                        <img src="${game.image}" class="card-img-top" alt="${game.title}">
+                                        <div class="card-body">
+                                            <h5 class="card-title">${game.title}</h5>
+                                            <p class="card-text">${game.description}</p>
+                                            <a href="${game.url}" class="btn btn-primary">Play Now</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section Activité Récente -->
+                <div class="recent-activity card mb-4 shadow">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Recent Activity</h2>
+                        <ul class="list-group list-group-flush">
+                            ${data.recent_activity.map(activity => `
+                                <li class="list-group-item">${activity}</li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        return `
+            <div class="login-prompt card mb-4 shadow">
+                <div class="card-body text-center">
+                    <h2 class="card-title">Please log in to access all features</h2>
+                    <a class="nav-link btn btn-primary" href="/login" data-link>Log In</a>
+                    <a href="/accounts/signup/" class="nav-link btn btn-secondary">Sign Up</a>
+                </div>
+            </div>
+        `;
+    }
+}
 
 // DÉFINIR LES ROUTES
 router.on('/', loadHomePage);
 router.on('/login', loadLoginPage);
 router.on('/signup', loadSignUpPage);
-
+router.on('/profile', loadProfilePage);
 
 // DÉMARRER LE ROUTEUR
 router.start();
 
 // Gestion du thème sombre
 function toggleDarkMode() {
-    const body = document.documentElement; // Utiliser html au lieu de body
+    const body = document.documentElement;
     const currentTheme = body.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? '' : 'dark';
     
     body.setAttribute('data-theme', newTheme);
-    
-    // Sauvegarder la préférence dans localStorage
     localStorage.setItem('theme', newTheme);
-    
-    console.log('Thème changé vers:', newTheme || 'default');
 }
 
 // Initialiser le thème au chargement
@@ -391,74 +619,11 @@ function initDarkMode() {
     }
 }
 
-// Ajouter après le chargement du DOM
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM chargé, initialisation du thème...");
     initDarkMode();
     
     const darkModeBtn = document.querySelector('#theme-toggle');
-    console.log("Bouton thème trouvé?", !!darkModeBtn);
-    console.log("Élément trouvé:", darkModeBtn);
-    
     if (darkModeBtn) {
         darkModeBtn.addEventListener('click', toggleDarkMode);
-        console.log("Event listener pour thème ajouté");
-    } else {
-        console.warn('Bouton dark mode non trouvé');
     }
 });
-
-//Debug//
-// Fonction utilitaire pour inspecter les éléments du DOM
-function debugElement(selector, message = "Element") {
-    const element = document.querySelector(selector);
-    console.log(`${message} '${selector}':`, element ? "Trouvé ✅" : "Non trouvé ❌", element);
-    return element;
-}
-
-// Fonction pour déboguer le thème
-function debugTheme() {
-    console.group("Debug Thème");
-    console.log("data-theme actuel:", document.documentElement.getAttribute('data-theme') || "default");
-    console.log("theme dans localStorage:", localStorage.getItem('theme') || "non défini");
-    debugElement('#theme-toggle', "Bouton thème");
-    console.groupEnd();
-}
-
-// Fonction pour déboguer le login
-function debugLogin() {
-    console.group("Debug Login");
-    debugElement('#login-form', "Formulaire login");
-    debugElement('#app', "Conteneur app");
-    console.log("Routes définies:", Object.keys(router.routes));
-    console.log("URL courante:", window.location.pathname);
-    console.groupEnd();
-}
-
-// Ajouter au chargement de la page
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("==== DÉBOGAGE DÉMARRÉ ====");
-    debugTheme();
-    debugLogin();
-    
-    // Tester le cookie CSRF
-    console.log("CSRF Token présent?", !!getCookie('csrftoken'));
-});
-
-console.log("Token CSRF:", getCookie('csrftoken'));
-
-function showNotification(message, type) {
-    const notificationContainer = document.createElement('div');
-    notificationContainer.classList.add('notification', type);
-    notificationContainer.textContent = message;
-    
-    // Ajoute la notification au DOM
-    document.body.appendChild(notificationContainer);
-    
-    // Retire la notification après 5 secondes
-    setTimeout(() => notificationContainer.remove(), 5000);
-}
-
-console.log(FormData);
-
-console.log(signUpForm);

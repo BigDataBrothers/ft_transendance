@@ -10,11 +10,12 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
 from django.contrib.auth.forms import AuthenticationForm
+from accounts.models import Profile, Notification
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core.files.storage import default_storage
 from django.views.decorators.http import require_POST
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 
 import requests
 import secrets
@@ -34,24 +35,38 @@ class SignUpView(CreateView):
 
 @login_required
 def profile_view(request):
-    user_profile = get_object_or_404(Profile, user=request.user)
+    """Retourne les données du profil utilisateur pour la SPA."""
+    profile = request.user.profile
 
-    if request.method == 'POST':
-        start_color = request.POST.get('startColor')
-        end_color = request.POST.get('endColor')
-
-        if start_color and end_color:
-            user_profile.profile_gradient_start = start_color
-            user_profile.profile_gradient_end = end_color
-            user_profile.save()
-            return JsonResponse({'success': True})
-
-    context = {
-        'user': request.user,
-        'user_profile': user_profile,
-        'friends': user_profile.friends.all(),
+    profile_data = {
+        "is_authenticated": True,
+        "username": request.user.username,
+        "email": request.user.email,
+        "profile_photo": request.user.profile_photo.url if request.user.profile_photo else None,
+        "level": profile.level,
+        "games_played": profile.games_played,
+        "win_rate": profile.win_rate,
+        "total_score": profile.total_score,
+        "last_played_game": profile.last_played_game,
+        "time_played": profile.time_played,
+        "profile_gradient_start": profile.profile_gradient_start,
+        "profile_gradient_end": profile.profile_gradient_end,
+        "achievements": [
+            {"name": achievement.name, "icon": achievement.icon}
+            for achievement in profile.achievements.all()
+        ],
+        "friends": [
+            {"username": friend.user.username, "profile_photo": friend.user.profile_photo.url if friend.user.profile_photo else None}
+            for friend in profile.friends.all()
+        ],
+        "notifications": [
+            {"message": notification.message, "type": notification.type, "created_at": notification.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+            for notification in profile.notifications.all()
+        ]
     }
-    return render(request, 'profile.html', context)
+
+    return JsonResponse(profile_data)
+
 
 @login_required
 def add_achievement(request):
@@ -121,38 +136,49 @@ def home(request):
     return render(request, 'home.html')
 
 def api_home(request):
-    """Retourne les données de la page d'accueil pour la SPA."""
-    
+    """Retourne les données de la page d'accueil pour la SPA avec les vraies infos utilisateur."""
+
     if request.user.is_authenticated:
-        # Données pour un utilisateur connecté
+        # Récupérer le profil lié à l'utilisateur
+        profile = request.user.profile
+
+        # Construire le profil utilisateur à partir des données réelles
         user_profile = {
-            "games_played": 42,
-            "win_rate": 75.3
+            "games_played": profile.games_played,
+            "win_rate": profile.win_rate,
+            "level": profile.level,
+            "total_score": profile.total_score,
+            "last_played_game": profile.last_played_game,
+            "time_played": profile.time_played,
+            "achievements": [achievement.name for achievement in profile.achievements.all()]
         }
 
+        # Simuler les jeux populaires (à remplacer plus tard par de vraies données si nécessaire)
         featured_games = [
-            {"title": "Game 1", "image": "/static/images/game1.jpg"},
-            {"title": "Game 2", "image": "/static/images/game2.jpg"},
-            {"title": "Game 3", "image": "/static/images/game3.jpg"}
+            {"title": "Game 1", "image": "/static/images/game1.jpg", "url": "/game1"},
+            {"title": "Game 2", "image": "/static/images/game2.jpg", "url": "/game2"},
+            {"title": "Game 3", "image": "/static/images/game3.jpg", "url": "/game3"}
         ]
 
+        # Activité récente basée sur les notifications
         recent_activity = [
-            {"user": "User1", "action": "achieved a new high score in Game 1."},
-            {"user": "User2", "action": "completed all levels in Game 2."},
-            {"user": "User3", "action": "joined the platform."}
+            f"{notif.user.username} - {notif.message}"
+            for notif in Notification.objects.filter(user=request.user).order_by('-created_at')[:5]
         ]
 
+        # Données à retourner
         data = {
             "is_authenticated": True,
             "username": request.user.username,
+            "profile_photo": request.user.profile_photo.url,  # Photo de profil
             "user_profile": user_profile,
             "featured_games": featured_games,
             "recent_activity": recent_activity
         }
         return JsonResponse(data)
-    
+
     else:
-        # Si l'utilisateur n'est pas connecté, renvoyer un message d'erreur ou un message standard
+        # Si l'utilisateur n'est pas connecté
         data = {
             "is_authenticated": False,
             "message": "You are not logged in. Log in here."
@@ -235,20 +261,6 @@ def signup_view(request):
 
     return JsonResponse({'detail': 'Inscription réussie !', 'redirect_url': reverse_lazy('login')}, status=201)
 
-# def signup(request):
-#     if request.method == 'POST':
-#         form = SignupForm(request.POST, request.FILES)  # Assurez-vous que request.FILES est inclus pour les fichiers
-#         if form.is_valid():
-#             # Créer un nouvel utilisateur
-#             user = form.save(commit=False)
-#             user.set_password(form.cleaned_data['password1'])  # Gère le mot de passe
-#             user.save()
-            
-#             return JsonResponse({'success': True, 'message': 'Inscription réussie!'})
-#         else:
-#             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-#     return JsonResponse({'success': False, 'errors': 'Méthode de requête invalide'}, status=400)
-
 
 def generate_random_state():
     return secrets.token_urlsafe(32)
@@ -267,24 +279,20 @@ def initiate_42_auth(request):
     }
 
     auth_url = f"{settings.AUTHORIZE_URL}?{urlencode(auth_params)}"
-    return redirect(auth_url)
+    return HttpResponseRedirect(auth_url)
+
+from django.shortcuts import redirect
 
 def callback_view(request):
-    """Step 2: Process the callback and exchange the code"""
     try:
-        # State verification for security
         state = request.GET.get('state')
         if state != request.session.get('oauth_state'):
-            messages.error(request, 'Invalid authentication state')
-            return redirect('login')
+            return JsonResponse({'success': False, 'error': 'Invalid authentication state'})
 
-        # Retrieve the code
         code = request.GET.get('code')
         if not code:
-            messages.error(request, 'No authentication code received')
-            return redirect('login')
+            return JsonResponse({'success': False, 'error': 'No authentication code received'})
 
-        # Exchange the code for a token
         token_response = requests.post(
             settings.TOKEN_URL,
             data={
@@ -297,41 +305,36 @@ def callback_view(request):
         )
 
         if not token_response.ok:
-            messages.error(request, 'Failed to retrieve authentication token')
-            return redirect('login')
+            return JsonResponse({'success': False, 'error': 'Failed to retrieve authentication token'})
 
-        token_data = token_response.json()
-        access_token = token_data.get('access_token')
+        access_token = token_response.json().get('access_token')
 
-        # Use the token to retrieve user information
         user_response = requests.get(
             'https://api.intra.42.fr/v2/me',
             headers={'Authorization': f'Bearer {access_token}'}
         )
 
         if not user_response.ok:
-            messages.error(request, 'Failed to retrieve user information')
-            return redirect('login')
+            return JsonResponse({'success': False, 'error': 'Failed to retrieve user information'})
 
         user_data = user_response.json()
 
-        try:
-            user = User.objects.get(username=user_data['login'])
-        except User.DoesNotExist:
-            user = User.objects.create_user(
-                username=user_data['login'],
-                email=user_data['email'],
-                password=None,
-                first_name=user_data.get('first_name', ''),
-                last_name=user_data.get('last_name', '')
-            )
+        # Création ou récupération de l'utilisateur
+        user, created = User.objects.get_or_create(
+            username=user_data['login'],
+            defaults={
+                'email': user_data['email'],
+                'first_name': user_data.get('first_name', ''),
+                'last_name': user_data.get('last_name', ''),
+                'is_42_user': True,
+                'intra_profile_url': user_data.get('url'),
+            }
+        )
+        if created:
             user.set_unusable_password()
-            user.is_42_user = True
-            user.is_staff = user_data.get('staff?', False)
-            user.intra_profile_url = user_data.get('url')
             user.save()
 
-        # Update profile photo
+        # Mise à jour de la photo de profil
         if 'image' in user_data and 'link' in user_data['image']:
             try:
                 image_response = requests.get(user_data['image']['link'])
@@ -344,19 +347,20 @@ def callback_view(request):
                         save=True
                     )
             except Exception as e:
-                messages.warning(request, f'Could not download profile photo: {e}')
+                print(f"Photo de profil non téléchargée : {e}")
 
-        # Log in the user
+        # Connexion de l'utilisateur
+        login(request, user)
         user.online = True
         user.save()
         Profile.objects.get_or_create(user=user)
-        login(request, user)
-        messages.success(request, 'You have successfully logged in via 42.')
-        return redirect('home')
+
+        # ✅ Redirection vers la page d'accueil
+        return redirect('/')
 
     except Exception as e:
-        messages.error(request, f'Authentication failed: {e}')
-        return redirect('login')
+        return JsonResponse({'success': False, 'error': f'Authentication failed: {e}'})
+
 
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
