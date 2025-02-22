@@ -1,5 +1,5 @@
 from django.views.generic import CreateView
-from django.contrib.auth.views import LoginView
+from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordChangeDoneView
 from django.urls import reverse_lazy
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, get_object_or_404, redirect
@@ -14,6 +14,7 @@ from accounts.models import Profile, Notification
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponseRedirect
 
@@ -21,6 +22,8 @@ import requests
 import secrets
 import uuid
 import json
+import os
+
 
 from .models import Profile, Achievement
 from .forms import AchievementForm, LoginForm, SignupForm
@@ -33,16 +36,25 @@ class SignUpView(CreateView):
     success_url = reverse_lazy("login")
     template_name = "registration/signup.html"
 
+def create_user_directory(user):
+    user_directory = os.path.join(settings.STATIC_ROOT, 'users', user.username)
+    if not os.path.exists(user_directory):
+        os.makedirs(user_directory)
+        print(f"Dossier créé pour l'utilisateur : {user.username}")
+
 @login_required
 def profile_view(request):
     """Retourne les données du profil utilisateur pour la SPA."""
     profile = request.user.profile
 
+    # Génération d'URL absolue pour les images
+    profile_photo_url = request.build_absolute_uri(request.user.profile_photo.url) if request.user.profile_photo else request.build_absolute_uri('/static/images/default_avatar.jpg')
+
     profile_data = {
         "is_authenticated": True,
         "username": request.user.username,
         "email": request.user.email,
-        "profile_photo": request.user.profile_photo.url if request.user.profile_photo else None,
+        "profile_photo": profile_photo_url, 
         "level": profile.level,
         "games_played": profile.games_played,
         "win_rate": profile.win_rate,
@@ -56,17 +68,24 @@ def profile_view(request):
             for achievement in profile.achievements.all()
         ],
         "friends": [
-            {"username": friend.user.username, "profile_photo": friend.user.profile_photo.url if friend.user.profile_photo else None}
+            {
+                "username": friend.user.username,
+                "profile_photo": request.build_absolute_uri(friend.user.profile_photo.url)
+                if friend.user.profile_photo else request.build_absolute_uri('/static/images/default_avatar.jpg')
+            }
             for friend in profile.friends.all()
         ],
         "notifications": [
-            {"message": notification.message, "type": notification.type, "created_at": notification.created_at.strftime('%Y-%m-%d %H:%M:%S')}
+            {
+                "message": notification.message,
+                "type": notification.type,
+                "created_at": notification.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            }
             for notification in profile.notifications.all()
         ]
     }
 
     return JsonResponse(profile_data)
-
 
 @login_required
 def add_achievement(request):
@@ -254,13 +273,14 @@ def signup_view(request):
         return JsonResponse({'detail': 'Nom d\'utilisateur déjà pris.'}, status=400)
 
     user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
+    create_user_directory(user)  # ✅ Création du dossier utilisateur
 
     if avatar:
-        filename = default_storage.save(f'avatars/{user.username}/{avatar.name}', avatar)
-        print("Avatar sauvegardé à :", filename)
+        filename = default_storage.save(f'users/{user.username}/{avatar.name}', avatar)
+        user.profile_photo = filename
+        user.save()
 
     return JsonResponse({'detail': 'Inscription réussie !', 'redirect_url': reverse_lazy('login')}, status=201)
-
 
 def generate_random_state():
     return secrets.token_urlsafe(32)
@@ -285,41 +305,44 @@ from django.shortcuts import redirect
 
 def callback_view(request):
     try:
+        # Vérifier le state
         state = request.GET.get('state')
-        if state != request.session.get('oauth_state'):
-            return JsonResponse({'success': False, 'error': 'Invalid authentication state'})
+        stored_state = request.session.get('oauth_state')
+        if not state or state != stored_state:
+            return JsonResponse({'success': False, 'error': 'Invalid state parameter'})
 
+        # Récupérer le code d'autorisation
         code = request.GET.get('code')
         if not code:
-            return JsonResponse({'success': False, 'error': 'No authentication code received'})
+            return JsonResponse({'success': False, 'error': 'No code provided'})
 
-        token_response = requests.post(
-            settings.TOKEN_URL,
-            data={
-                'grant_type': 'authorization_code',
-                'client_id': settings.FT_CLIENT_ID,
-                'client_secret': settings.FT_CLIENT_SECRET,
-                'code': code,
-                'redirect_uri': settings.FT_REDIRECT_URI,
-            }
-        )
+        # Échanger le code contre un token d'accès
+        token_response = requests.post(settings.TOKEN_URL, data={
+            'grant_type': 'authorization_code',
+            'client_id': settings.FT_CLIENT_ID,
+            'client_secret': settings.FT_CLIENT_SECRET,
+            'code': code,
+            'redirect_uri': settings.FT_REDIRECT_URI
+        })
 
         if not token_response.ok:
-            return JsonResponse({'success': False, 'error': 'Failed to retrieve authentication token'})
+            return JsonResponse({'success': False, 'error': 'Failed to obtain access token'})
 
-        access_token = token_response.json().get('access_token')
+        token_data = token_response.json()
+        access_token = token_data.get('access_token')
 
-        user_response = requests.get(
+        # Récupérer les données de l'utilisateur
+        user_data_response = requests.get(
             'https://api.intra.42.fr/v2/me',
             headers={'Authorization': f'Bearer {access_token}'}
         )
 
-        if not user_response.ok:
-            return JsonResponse({'success': False, 'error': 'Failed to retrieve user information'})
+        if not user_data_response.ok:
+            return JsonResponse({'success': False, 'error': 'Failed to fetch user data'})
 
-        user_data = user_response.json()
-
-        # Création ou récupération de l'utilisateur
+        user_data = user_data_response.json()
+        
+        # Créer ou mettre à jour l'utilisateur
         user, created = User.objects.get_or_create(
             username=user_data['login'],
             defaults={
@@ -327,44 +350,85 @@ def callback_view(request):
                 'first_name': user_data.get('first_name', ''),
                 'last_name': user_data.get('last_name', ''),
                 'is_42_user': True,
-                'intra_profile_url': user_data.get('url'),
+                'intra_profile_url': user_data.get('url', '')
             }
         )
-        if created:
-            user.set_unusable_password()
+
+        if not created:
+            # Mettre à jour les informations existantes
+            user.email = user_data['email']
+            user.first_name = user_data.get('first_name', '')
+            user.last_name = user_data.get('last_name', '')
+            user.is_42_user = True
+            user.intra_profile_url = user_data.get('url', '')
             user.save()
 
-        # Mise à jour de la photo de profil
+        # Télécharger la photo de profil uniquement si elle n'existe pas déjà
         if 'image' in user_data and 'link' in user_data['image']:
             try:
-                image_response = requests.get(user_data['image']['link'])
-                if image_response.ok:
-                    from django.core.files.base import ContentFile
-                    image_name = f"avatar_{user.username}.jpg"
-                    user.profile_photo.save(
-                        image_name,
-                        ContentFile(image_response.content),
-                        save=True
-                    )
+                if not user.profile_photo:  # Vérifie si la photo de profil n'existe pas déjà
+                    print(f"Téléchargement de l'image pour {user.username}")
+                    image_response = requests.get(user_data['image']['link'], timeout=5)
+                    if image_response.ok:
+                        file_extension = '.jpg'
+                        image_name = f'users/{user.username}/avatar_{uuid.uuid4()}{file_extension}'
+
+                        upload_path = os.path.join(settings.MEDIA_ROOT, f'users/{user.username}')
+                        os.makedirs(upload_path, exist_ok=True)
+
+                        user.profile_photo.save(
+                            image_name,
+                            ContentFile(image_response.content),
+                            save=True
+                        )
             except Exception as e:
-                print(f"Photo de profil non téléchargée : {e}")
+                print(f"Erreur lors du téléchargement de l'image: {str(e)}")
 
-        # Connexion de l'utilisateur
+        # Créer ou mettre à jour le profil
+        Profile.objects.get_or_create(
+            user=user,
+            defaults={
+                'level': 0,
+                'games_played': 0,
+                'win_rate': 0.0,
+                'total_score': 0
+            }
+        )
+
+        # Connecter l'utilisateur
         login(request, user)
-        user.online = True
-        user.save()
-        Profile.objects.get_or_create(user=user)
-
-        # ✅ Redirection vers la page d'accueil
+        user_directory = os.path.join(settings.MEDIA_ROOT, 'users', user.username)
+        os.makedirs(user_directory, exist_ok=True)
         return redirect('/')
 
     except Exception as e:
-        return JsonResponse({'success': False, 'error': f'Authentication failed: {e}'})
-
-
+        print(f"Erreur dans callback_view: {str(e)}")
+        return JsonResponse({'success': False, 'error': f'Authentication failed: {str(e)}'})
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
+
+@login_required
+def debug_profile_photo(request):
+    """Vue de debug pour vérifier les chemins des photos de profil"""
+    user = request.user
+    media_file_path = None
+    if user.profile_photo:
+        media_file_path = os.path.join(settings.MEDIA_ROOT, user.profile_photo.name)
+        exists = os.path.exists(media_file_path)
+    else:
+        exists = False
+
+    return JsonResponse({
+        'username': user.username,
+        'profile_photo_name': user.profile_photo.name if user.profile_photo else None,
+        'profile_photo_url': user.profile_photo.url if user.profile_photo else None,
+        'profile_photo_path': media_file_path,
+        'file_exists': exists,
+        'media_root': settings.MEDIA_ROOT,
+        'media_url': settings.MEDIA_URL,
+        'is_42_user': user.is_42_user,
+    })
 
 @csrf_exempt
 def save_profile_colors(request):
@@ -381,6 +445,20 @@ def save_profile_colors(request):
             return JsonResponse({'success': True})
 
     return JsonResponse({'success': False})
+
+class PasswordChangeAPIView(PasswordChangeView):
+    success_url = reverse_lazy('password_change_done')
+
+    def form_valid(self, form):
+        super().form_valid(form)
+        return JsonResponse({'success': True, 'redirect_url': self.success_url})
+
+    def form_invalid(self, form):
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+
+class PasswordChangeDoneAPIView(PasswordChangeDoneView):
+    def get(self, request, *args, **kwargs):
+        return JsonResponse({'success': True, 'message': 'Password successfully changed.'})
 
 
 def home_vue(request):

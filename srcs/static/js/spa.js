@@ -153,7 +153,7 @@ async function handleLogout(event) {
         }
 
         await updateNavbar();
-        window.location.href = '/';  // Rediriger vers la page d'accueil après logout
+        window.location.href = '/';
     } catch (error) {
         console.error('Erreur lors du logout:', error.message);
     }
@@ -280,6 +280,14 @@ async function loadProfilePage() {
 }
 
 function generateProfileContent(data) {
+
+    console.log("Profile data received:", data);
+    console.log("Profile photo URL:", data.profile_photo);
+
+    // Modifiez la façon dont vous construisez l'URL de l'image
+    const profilePhotoUrl = data.profile_photo || '/static/images/default_avatar.jpg';
+    console.log("Final profile photo URL:", profilePhotoUrl);
+    
     const html = `
     <div class="container mt-4">
         <div class="profile-background">
@@ -302,10 +310,10 @@ function generateProfileContent(data) {
             <div class="profile-header" style="background: linear-gradient(to right, ${data.profile_gradient_start}, ${data.profile_gradient_end});">
                 <div class="profile-summary">
                     <div class="avatar-section">
-                        <img src="${data.profile_photo || '/static/images/default_avatar.jpg'}" alt="Avatar" class="profile-avatar">
-                        <div class="online-status online">
-                            <span class="online-text">Online</span>
-                        </div>
+                        <img src="${profilePhotoUrl}" 
+                            alt="Avatar" 
+                            class="profile-avatar"
+                            onerror="this.src='/static/images/default_avatar.jpg'">
                     </div>
                     <div class="profile-details">
                         <h1>${data.username}</h1>
@@ -336,7 +344,7 @@ function generateProfileContent(data) {
                         <i class="fas fa-palette"></i> Customize Profile Colors
                     </button>
                     <div class="profile-links">
-                        <a href="/accounts/password_change/" class="profile-link custom-change-password-btn">
+                        <a href="/change-password" class="profile-link custom-change-password-btn" data-link>
                             <i class="fas fa-key"></i> Change Password
                         </a>
                         <button class="profile-link danger" id="logoutButton">
@@ -530,6 +538,97 @@ function loadLoginPage() {
     document.querySelector('#login-form').addEventListener('submit', handleLogin);
 }
 
+function loadChangePasswordPage() {
+    const csrfToken = getCookie('csrftoken');
+
+    const changePasswordHTML = `
+        <div class="login-section">
+            <h2>Change Password</h2>
+            <div id="password-change-errors" class="error-message"></div>
+            <form id="password-change-form" method="post" class="fade-in">
+                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+                
+                <div class="form-group">
+                    <label for="old_password">Old Password</label>
+                    <input type="password" name="old_password" id="old_password" class="form-control" placeholder="Enter your current password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password1">New Password</label>
+                    <input type="password" name="new_password1" id="new_password1" class="form-control" placeholder="Enter a new password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="new_password2">Confirm New Password</label>
+                    <input type="password" name="new_password2" id="new_password2" class="form-control" placeholder="Confirm new password" required>
+                </div>
+
+                <button type="submit" class="btn animated-btn">Change Password</button>
+            </form>
+        </div>
+    `;
+
+    document.querySelector('#app').innerHTML = changePasswordHTML;
+
+    document.getElementById('password-change-form').addEventListener('submit', handlePasswordChange);
+}
+
+
+function loadPasswordChangeSuccessPage() {
+    const successHTML = `
+        <div class="success-section">
+            <h2>Password Changed Successfully</h2>
+            <p>Your password has been updated successfully.</p>
+            <a href="/profile" data-link>Return to Profile</a>
+        </div>
+    `;
+
+    document.querySelector('#app').innerHTML = successHTML;
+}
+
+
+async function handlePasswordChange(event) {
+    event.preventDefault();
+
+    const form = document.getElementById('password-change-form');
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch('/auth/password_change/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+            },
+            body: formData
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            router.navigate('/password-change-success');
+        } else {
+            displayPasswordChangeErrors(result.errors || { error: ['An unexpected error occurred.'] });
+        }
+    } catch (error) {
+        console.error('Erreur lors du changement de mot de passe:', error);
+    }
+}
+
+function displayPasswordChangeErrors(errors) {
+    const errorDiv = document.getElementById('password-change-errors');
+    errorDiv.innerHTML = '';
+
+    for (const field in errors) {
+        errors[field].forEach(error => {
+            const p = document.createElement('p');
+            p.textContent = `${field}: ${error}`;
+            p.style.color = 'var(--danger-color)';
+            p.style.margin = '5px 0';
+            errorDiv.appendChild(p);
+        });
+    }
+}
+
 function generateHomePageContent(data) {
     if (data.is_authenticated) {
         return `
@@ -585,7 +684,7 @@ function generateHomePageContent(data) {
                 <div class="card-body text-center">
                     <h2 class="card-title">Please log in to access all features</h2>
                     <a class="nav-link btn btn-primary" href="/login" data-link>Log In</a>
-                    <a href="/accounts/signup/" class="nav-link btn btn-secondary">Sign Up</a>
+                    <a href="/signup" data-link class="nav-link btn btn-secondary">Sign Up</a>
                 </div>
             </div>
         `;
@@ -597,6 +696,9 @@ router.on('/', loadHomePage);
 router.on('/login', loadLoginPage);
 router.on('/signup', loadSignUpPage);
 router.on('/profile', loadProfilePage);
+router.on('/change-password', loadChangePasswordPage);
+router.on('/password-change-success', loadPasswordChangeSuccessPage);
+
 
 // DÉMARRER LE ROUTEUR
 router.start();

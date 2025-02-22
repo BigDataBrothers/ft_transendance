@@ -5,13 +5,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 
+
+
+def user_profile_photo_path(instance, filename):
+    return f'profiles/{instance.id}/{filename}'
+
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    profile_photo = models.ImageField(
-        verbose_name='Avatar',
-        upload_to='avatars/',
-        default='avatars/default.jpg'
-    )
+    profile_photo = models.ImageField(upload_to=user_profile_photo_path)
     online = models.BooleanField(default=False)
     is_42_user = models.BooleanField(default=False)
     intra_profile_url = models.URLField(max_length=255, null=True, blank=True)
@@ -45,7 +46,6 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"Profile de {self.user.username}"
-
 
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
