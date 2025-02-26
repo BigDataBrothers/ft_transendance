@@ -25,6 +25,7 @@ urlpatterns = [
     path('callback/', accounts.views.callback_view, name='callback_42'),
     path('api/profile/', accounts.views.profile_view, name='profile_view'),
     path('debug-photo/', accounts.views.debug_profile_photo, name='debug_photo'),
+    # path('pong/', accounts.views.pong_view, name='pong'),
 
     # Route catch-all pour la SPA
     # re_path(r'^(?!api|admin|accounts|auth|login|logout|callback).*$',

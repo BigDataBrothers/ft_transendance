@@ -105,6 +105,14 @@ body::after {
     z-index: 1000;
 }
 
+#app {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+
 /* Styles pour la barre de navigation */
 .navbar {
     background-color: var(--primary-bg) !important;
@@ -1520,3 +1528,147 @@ body::after {
         opacity: 0;
     }
 }
+
+/** Pong  **/
+
+/* Styles spécifiques au jeu Pong */
+#game {
+    display: none;
+    text-align: center;
+}
+
+canvas {
+    border: 2px solid var(--accent-color);
+    background-color: var(--primary-bg);
+    box-shadow: 0px  var(--highlight-color);/* Glow effet */
+    transition: opacity 0.5s ease-in-out, transform 0.3s ease-in-out;
+}
+/* Boutons du menu */
+.insertCoin,
+#menu button,
+#menuMode button,
+#menuDifficulty button {
+    background-color: var(--button-bg);
+    color: var(--primary-text);
+    font-family: 'Press Start 2P', cursive;
+    font-size: 20px;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.insertCoin:hover,
+#menu button:hover,
+#menuMode button:hover,
+#menuDifficulty button:hover {
+    background-color: var(--highlight-color);
+    color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+.insertCoin:focus,
+#menu button:focus,
+#menuMode button:focus,
+#menuDifficulty button:focus {
+    background-color: var(--highlight-color);
+    color: var(--accent-color);
+}
+
+/* Menus */
+#menu,
+#menuMode,
+#menuDifficulty {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    background-color: var(--modal-bg);
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+}
+
+#menu ul,
+#menuMode ul,
+#menuDifficulty ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#menu li,
+#menuMode li,
+#menuDifficulty li {
+    margin: 15px 0;
+}
+
+/* Instructions bien placées sous le menu */
+.controlMenu {
+    position: absolute;
+    bottom: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1rem;
+    color: var(--primary-text);
+    text-align: center;
+    width: 100%;
+}
+
+/* Assurer qu'elles ne chevauchent pas les menus */
+#menu + .controlMenu,
+#menuMode + .controlMenu,
+#menuDifficulty + .controlMenu {
+    margin-top: 20px;
+}
+
+
+/* Statistiques */
+#gameStats {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background: var(--friend-card-bg);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+/* Assurer un bon espacement avec le menu */
+#menu + #gameStats,
+#menuMode + #gameStats,
+#menuDifficulty + #gameStats {
+    margin-top: 30px;
+}
+
+
+#gameStats h2 {
+    color: var(--accent-color);
+    text-align: center;
+}
+
+#gameStats p {
+    text-align: center;
+}
+
+/* Animations */
+@keyframes clignote {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+
+/***/

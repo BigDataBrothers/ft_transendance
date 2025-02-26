@@ -109,6 +109,9 @@ async function updateNavbar() {
             if (data.is_authenticated) {
                 navbar.innerHTML = `
                     <li class="nav-item">
+                        <a class="nav-link" href="/pong" data-link>Pong</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="/" data-link>Home</a>
                     </li>
                     <li class="nav-item">
@@ -344,9 +347,11 @@ function generateProfileContent(data) {
                         <i class="fas fa-palette"></i> Customize Profile Colors
                     </button>
                     <div class="profile-links">
+                    {% if not user.is_42_user %}
                         <a href="/change-password" class="profile-link custom-change-password-btn" data-link>
                             <i class="fas fa-key"></i> Change Password
                         </a>
+                    {% endif %}
                         <button class="profile-link danger" id="logoutButton">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </button>
@@ -698,6 +703,21 @@ router.on('/signup', loadSignUpPage);
 router.on('/profile', loadProfilePage);
 router.on('/change-password', loadChangePasswordPage);
 router.on('/password-change-success', loadPasswordChangeSuccessPage);
+router.on('/pong', async () => {
+    try {
+        const response = await fetch('/static/pong.html');
+        const html = await response.text();
+        document.querySelector('#app').innerHTML = html;
+
+        // Charger les scripts nécessaires
+        const script = document.createElement('script');
+        script.src = "/static/js/pong.js";
+        script.defer = true;
+        document.body.appendChild(script);
+    } catch (error) {
+        console.error("Erreur lors du chargement de Pong:", error);
+    }
+});
 
 
 // DÉMARRER LE ROUTEUR

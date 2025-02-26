@@ -36,6 +36,9 @@ class SignUpView(CreateView):
     success_url = reverse_lazy("login")
     template_name = "registration/signup.html"
 
+# def pong_view(request):
+#     return render(request, 'pong.html')
+
 def create_user_directory(user):
     user_directory = os.path.join(settings.STATIC_ROOT, 'users', user.username)
     if not os.path.exists(user_directory):
@@ -61,6 +64,7 @@ def profile_view(request):
         "total_score": profile.total_score,
         "last_played_game": profile.last_played_game,
         "time_played": profile.time_played,
+        "is_42_user": request.user.is_42_user,
         "profile_gradient_start": profile.profile_gradient_start,
         "profile_gradient_end": profile.profile_gradient_end,
         "achievements": [
