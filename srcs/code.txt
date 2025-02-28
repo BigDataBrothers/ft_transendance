@@ -1,3 +1,93 @@
+# accounts/models.py
+from django.contrib.auth.models import AbstractUser, User
+from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.conf import settings
+
+
+
+def user_profile_photo_path(instance, filename):
+    return f'profiles/{instance.id}/{filename}'
+
+class User(AbstractUser):
+    email = models.EmailField(unique=True)
+    profile_photo = models.ImageField(upload_to=user_profile_photo_path)
+    online = models.BooleanField(default=False)
+    is_42_user = models.BooleanField(default=False)
+    intra_profile_url = models.URLField(max_length=255, null=True, blank=True)
+
+class Achievement(models.Model):
+    name = models.CharField(max_length=100)
+    icon = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.name
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    type = models.CharField(max_length=20, default='info')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class Profile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='profile')
+    level = models.IntegerField(default=0)
+    games_played = models.IntegerField(default=0)
+    win_rate = models.FloatField(default=0.0)
+    total_score = models.IntegerField(default=0)
+    friends = models.ManyToManyField('self', symmetrical=False, related_name='friends_set')
+    last_played_game = models.CharField(max_length=100, blank=True, null=True)
+    time_played = models.FloatField(default=0.0)
+    achievements = models.ManyToManyField(Achievement, related_name='profiles')
+    profile_gradient_start = models.CharField(max_length=7, default='#1b2838')
+    profile_gradient_end = models.CharField(max_length=7, default='#2a475e')
+    notifications = models.ManyToManyField(Notification, blank=True)
+
+    def __str__(self):
+        return f"Profile de {self.user.username}"
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+
+@receiver(post_save, sender=User)
+def save_user_profile(sender, instance, **kwargs):
+    instance.profile.save()
+
+class GameStatistics(models.Model):
+    DIFFICULTY_CHOICES = [
+        ('easy', 'Facile'),
+        ('medium', 'Moyen'),
+        ('hard', 'Difficile'),
+    ]
+    
+    player = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pong_games')
+    date_played = models.DateTimeField(auto_now_add=True)
+    player_score = models.IntegerField()
+    computer_score = models.IntegerField()
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
+    is_perfect_game = models.BooleanField(default=False)  # Si le joueur gagne sans prendre de points
+    
+    class Meta:
+        ordering = ['-date_played']
+
+class PlayerStats(models.Model):
+    player = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pong_stats')
+    total_games = models.IntegerField(default=0)
+    games_won = models.IntegerField(default=0)
+    games_lost = models.IntegerField(default=0)
+    perfect_games = models.IntegerField(default=0)
+    
+    @property
+    def win_ratio(self):
+        if self.total_games > 0:
+            return (self.games_won / self.total_games) * 100
+        return 0
+
+//////////////////////////////////////////
+
 from django.views.generic import CreateView
 from django.contrib.auth.views import LoginView, PasswordChangeView, PasswordChangeDoneView
 from django.urls import reverse_lazy
@@ -48,6 +138,7 @@ def create_user_directory(user):
 
 @login_required
 def profile_view(request):
+    """Retourne les données du profil utilisateur pour la SPA."""
     profile = request.user.profile
 
     # Génération d'URL absolue pour les images
@@ -486,121 +577,38 @@ def index(request):
 def save_game_stats(request):
     """API pour sauvegarder les statistiques d'une partie"""
     if request.method == 'POST':
-        try:
-            print("Received save_game_stats request")
-            data = json.loads(request.body)
-            print(f"Received data: {data}")
-            
-            # Récupérer ou créer les stats du joueur
-            player_stats, created = PlayerStats.objects.get_or_create(player=request.user)
-            
-            # Mettre à jour les stats globales
-            player_stats.total_games += 1
-            
-            # Déterminer le gagnant et mettre à jour les stats
-            is_perfect_game = False
-            if data['player_score'] > data['computer_score']:
-                player_stats.games_won += 1
-                if data['computer_score'] == 0:
-                    is_perfect_game = True
-                    player_stats.perfect_games += 1
-            else:
-                player_stats.games_lost += 1
-            
-            # Calculer le taux de victoire
-            if player_stats.total_games > 0:
-                player_stats.win_ratio = (player_stats.games_won / player_stats.total_games) * 100
-            
-            player_stats.save()
-            
-            # Enregistrer cette partie spécifique
-            game = GameStatistics.objects.create(
-                player=request.user,
-                player_score=data['player_score'],
-                computer_score=data['computer_score'],
-                difficulty=data.get('difficulty', 'medium'),
-                is_perfect_game=is_perfect_game
-            )
-            
-            # Mettre à jour également le profil principal de l'utilisateur
-            profile = request.user.profile
-            profile.games_played += 1
-            profile.last_played_game = 'Pong'
-            
-            # Calculer le nouveau taux de victoire global pour le profil
-            if player_stats.total_games > 0:
-                profile.win_rate = (player_stats.games_won / player_stats.total_games) * 100
-            
-            # Ajouter les points au score total
-            profile.total_score += data['player_score']
-            
-            # Mise à jour du temps de jeu (approximatif, par exemple 5 minutes par partie)
-            profile.time_played += 5.0  # minutes
-            
-            profile.save()
-            
-            return JsonResponse({'success': True, 'message': 'Game stats saved successfully'})
+        data = json.loads(request.body)
         
-        except Exception as e:
-            print(f"Error saving game stats: {e}")
-            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        # Récupérer ou créer les stats du joueur
+        player_stats, created = PlayerStats.objects.get_or_create(player=request.user)
+        
+        # Mettre à jour les stats globales
+        player_stats.total_games += 1
+        
+        # Déterminer le gagnant et mettre à jour les stats
+        is_perfect_game = False
+        if data['player_score'] > data['computer_score']:
+            player_stats.games_won += 1
+            if data['computer_score'] == 0:
+                is_perfect_game = True
+                player_stats.perfect_games += 1
+        else:
+            player_stats.games_lost += 1
+        
+        player_stats.save()
+        
+        # Enregistrer cette partie
+        game = GameStatistics.objects.create(
+            player=request.user,
+            player_score=data['player_score'],
+            computer_score=data['computer_score'],
+            difficulty=data['difficulty'],
+            is_perfect_game=is_perfect_game
+        )
+        
+        return JsonResponse({'status': 'success'})
     
-    return JsonResponse({'success': False, 'error': 'Only POST method is allowed'}, status=405)
-
-# Ajout d'une API pour récupérer les stats de Pong pour la page de profil
-@login_required
-def get_combined_profile_stats(request):
-    """API pour récupérer les statistiques combinées du profil et du jeu Pong"""
-    profile = request.user.profile
-    
-    try:
-        pong_stats = PlayerStats.objects.get(player=request.user)
-    except PlayerStats.DoesNotExist:
-        pong_stats = None
-    
-    # Récupérer les 5 dernières parties de Pong
-    recent_games = GameStatistics.objects.filter(player=request.user).order_by('-date_played')[:5]
-    recent_games_data = []
-    
-    for game in recent_games:
-        recent_games_data.append({
-            'date': game.date_played.strftime('%d/%m/%Y'),
-            'player_score': game.player_score,
-            'computer_score': game.computer_score,
-            'difficulty': game.get_difficulty_display(),
-            'result': 'Victoire' if game.player_score > game.computer_score else 'Défaite',
-            'perfect': game.is_perfect_game
-        })
-    
-    # Construire les données combinées
-    profile_data = {
-        "username": request.user.username,
-        "email": request.user.email,
-        "profile_photo": request.build_absolute_uri(request.user.profile_photo.url) if request.user.profile_photo else None,
-        "level": profile.level,
-        "games_played": profile.games_played,
-        "win_rate": profile.win_rate,
-        "total_score": profile.total_score,
-        "last_played_game": profile.last_played_game,
-        "time_played": profile.time_played,
-        "is_42_user": request.user.is_42_user,
-        "profile_gradient_start": profile.profile_gradient_start,
-        "profile_gradient_end": profile.profile_gradient_end,
-        "achievements": [
-            {"name": achievement.name, "icon": achievement.icon}
-            for achievement in profile.achievements.all()
-        ],
-        "pong_stats": {
-            "total_games": pong_stats.total_games if pong_stats else 0,
-            "games_won": pong_stats.games_won if pong_stats else 0,
-            "games_lost": pong_stats.games_lost if pong_stats else 0,
-            "perfect_games": pong_stats.perfect_games if pong_stats else 0,
-            "win_ratio": pong_stats.win_ratio if pong_stats else 0,
-            "recent_games": recent_games_data
-        }
-    }
-    
-    return JsonResponse(profile_data)
+    return JsonResponse({'status': 'error'}, status=400)
 
 @login_required
 def get_player_stats(request):

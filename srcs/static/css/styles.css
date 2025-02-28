@@ -1,27 +1,4 @@
 /* Variables globales pour les couleurs et les thèmes */
-/* :root {
-    --primary-bg: #171a21;
-    --primary-text: #c6d4df;
-    --accent-color: #66c0f4;
-    --highlight-color: #1b2838;
-    --button-bg: #2a475e;
-    --danger-color: #dc3545;
-    --danger-hover-color: #c82333;
-    --friend-action-bg: linear-gradient(135deg, #66c0f4 0%, #4b91b3 100%);
-    --friend-action-hover-bg: linear-gradient(135deg, #7ccaff 0%, #5da1c4 100%);
-    --modal-bg: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
-    --notification-bg: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
-    --notification-count-bg: #66c0f4;
-    --empty-state-color: rgba(255, 255, 255, 0.6);
-    --friend-card-bg: linear-gradient(135deg, #1b2838 0%, #2a475e 100%);
-    --friend-avatar-border: #66c0f4;
-    --friend-name-color: #fcfcec;
-    --remove-friend-color: #ff4d4d;
-    --remove-friend-hover-color: #ff6666;
-    --input-border-color: rgba(255, 255, 255, 0.1);
-    --input-bg-color: rgba(255, 255, 255, 0.05);
-    --input-focus-border-color: #66c0f4;
-} */
 :root {
     --primary-bg: #1b2838;
     --primary-text: #b8c2cc;
@@ -70,9 +47,6 @@
     --input-focus-border-color: #80d0c7;
 }
 
-
-
-
 /* Styles globaux pour le corps de la page */
 body {
     background-color: var(--primary-bg);
@@ -111,7 +85,6 @@ body::after {
     align-items: center;
     height: 100vh;
 }
-
 
 /* Styles pour la barre de navigation */
 .navbar {
@@ -469,7 +442,7 @@ body::after {
 
 .signup-section button {
     background-color: var(--primary-bg);
-    color: var(--primary-text);
+    color: var (--primary-text);
     border: none;
     border-radius: 25px;
     padding: 1rem 2rem;
@@ -584,8 +557,6 @@ body::after {
 .online-status:hover .online-text {
     display: inline-block;
 }
-
-
 
 .profile-details {
     flex-grow: 1;
@@ -876,11 +847,6 @@ body::after {
     height: 32px;
     text-align: center;
 }
-
-
-/* .data {
-    color: var(--accent-color);
-} */
 
 /* Responsive design */
 @media (max-width: 768px) {
@@ -1208,7 +1174,6 @@ body::after {
     background: var(--button-bg);
     min-height: 100vh;
     padding: 20px;
-    color: var(--primary-text);
 }
 
 .profile-header {
@@ -1564,7 +1529,7 @@ canvas {
 #menuMode button:hover,
 #menuDifficulty button:hover {
     background-color: var(--highlight-color);
-    color: var(--accent-color);
+    color: var (--accent-color);
     transform: scale(1.1);
 }
 
@@ -1670,5 +1635,150 @@ canvas {
     50% { opacity: 0; }
 }
 
+/* Correction pour le positionnement des menus et bulles d'info */
+#menu, 
+#menuMode, 
+#menuDifficulty,
+#menuInfo,
+.infoBubble {
+    position: fixed;  /* Utiliser fixed au lieu de absolute */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;  /* Assurer que les menus sont au-dessus des autres éléments */
+    width: 80%;
+    max-width: 400px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    overflow: auto;  /* Permettre le défilement si nécessaire */
+    max-height: 80vh;  /* Limiter la hauteur pour les écrans plus petits */
+}
 
-/***/
+/* Style pour la bulle d'info */
+#menuInfo,
+.infoBubble {
+    background-color: var(--modal-bg);
+    color: var(--primary-text);
+    padding: 20px;
+    border-radius: 10px;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Positionnement du bouton "Insert Coin" */
+.insertCoin,
+#menuLink {
+    position: fixed;  /* Utiliser fixed pour un positionnement global */
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 900;  /* Juste en-dessous des menus */
+    margin: 0 auto;
+    width: auto;
+    max-width: 90%;
+    box-sizing: border-box;
+}
+
+/* Instructions */
+.controlMenu,
+#firstInstruct,
+#secondInstruct {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 800;
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+    color: var(--primary-text);
+    margin: 0 auto;
+    padding: 10px;
+}
+
+/* Assurer que le canvas et son conteneur sont bien dimensionnés */
+#gameCanvas,
+#backgroundCanvas {
+    display: block;  /* Éviter les espaces blancs autour du canvas */
+    margin: 0 auto;  /* Centrer horizontalement */
+    max-width: 100%;  /* Limiter la largeur maximale */
+    max-height: 80vh;  /* Limiter la hauteur maximale */
+}
+
+/* Conteneur du jeu */
+#pong {
+    position: relative;
+    width: 100%;
+    height: 100vh;  /* Utiliser toute la hauteur de l'écran */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;  /* Éviter les débordements */
+    padding: 20px 0 80px; /* Ajouter du padding en bas pour laisser de la place aux boutons */
+}
+
+/* Statistiques */
+#gameStats {
+    position: fixed;
+    bottom: 70px;  /* Position fixe depuis le bas */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background: var (--friend-card-bg);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    z-index: 700;  /* En dessous des menus et instructions */
+}
+
+@media (max-width: 768px) {
+    .insertCoin,
+    #menuLink {
+        bottom: 40px;
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+}
+
+/* Style amélioré pour les menus et info-bulles */
+#menu, 
+#menuMode, 
+#menuDifficulty,
+#menuInfo,
+.infoBubble {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000;
+    width: 80%;
+    max-width: 400px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    overflow: auto;
+    max-height: 80vh;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+/* Adapter la taille de la police pour les petits écrans */
+@media (max-width: 576px) {
+    #menu button,
+    #menuMode button,
+    #menuDifficulty button,
+    .insertCoin {
+        font-size: 16px;
+        padding: 8px 15px;
+    }
+    
+    .controlMenu,
+    #firstInstruct,
+    #secondInstruct {
+        font-size: 0.8rem;
+    }
+    
+    #gameStats {
+        bottom: 120px; /* Augmenter la distance du bas pour les petits écrans */
+    }
+}

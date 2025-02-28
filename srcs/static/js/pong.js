@@ -1,4 +1,3 @@
-
 // ----------------------------------------------------
 // Déclaration des éléments DOM utilisés dans le script
 // ----------------------------------------------------
@@ -96,6 +95,9 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     initializeBackgroundGame();  // Assure-toi que ton jeu s'initialise après le chargement du DOM.
+    if (infoBubble) {
+        infoBubble.style.display = 'none';
+    }
 });
 
 
@@ -147,6 +149,7 @@ function toggleInfoBubble() {
         infoBubble.style.display = 'block';
         bubbleFocus = 0;
         disableMenu();
+        // Ajouter une vérification pour s'assurer que le texte est typé seulement lors du clic sur le bouton
         typeText("info1", infoText, 50);
     } else {
         infoBubble.style.display = 'none';
@@ -623,6 +626,13 @@ function ballMove() {
     }
 }
 
+function resetBall() {
+    game.ball.x = canvas.width / 2;
+    game.ball.y = canvas.height / 2;
+    game.ball.speed.x = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
+    game.ball.speed.y = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
+}
+
 function collide(player) {
     const ball = game.ball;
     const isPlayerPaddle = player === game.player;
@@ -648,6 +658,9 @@ function collide(player) {
             hitSound.play();
             ball.speed.x *= -1.2;
             
+            if (Math.abs(ball.speed.x) > MAX_BALL_SPEED) {
+                ball.speed.x = Math.sign(ball.speed.x) * MAX_BALL_SPEED;
+            }
             // Ajuster la direction en fonction du point d'impact
             const hitPosition = (yAtCollision - player.y) / PLAYER_HEIGHT;
             const angle = hitPosition * Math.PI / 2;
@@ -679,6 +692,12 @@ function collide(player) {
                 winSound.play();
                 isGameOver = true;
                 recordGameData(winner);
+                saveGameStats({
+                    playerScore: game.player.score, 
+                    computerScore: game.computer.score, 
+                    difficulty: difficultySelect
+                });
+                
             }
         }
     }
@@ -706,6 +725,11 @@ function displayGameData() {
         }
         lastGamesList.appendChild(li);
     });
+}
+
+function cleanupEventListeners() {
+    window.removeEventListener('keydown', keyDownHandler);
+    window.removeEventListener('keyup', keyUpHandler);
 }
 
 function recordGameData(winner) {
@@ -746,23 +770,10 @@ function recordGameData(winner) {
 
     // Afficher les données mises à jour
     displayGameData();
-}
-
-function changeDirection(paddleY, yAtCollision) {
-    const hitPosition = yAtCollision - paddleY;
-    const normalizedHit = hitPosition / PLAYER_HEIGHT;
-    const angle = normalizedHit * Math.PI / 2; // Angle entre -π/2 et π/2
-    game.ball.speed.y = Math.sin(angle) * 5; // Ajustez la vitesse si nécessaire
-}
-
-function resetBall() {
-    const { ball, player, computer } = game;
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height / 2;
-    ball.speed.x = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
-    ball.speed.y = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
-    player.y = canvas.height / 2 - PLAYER_HEIGHT / 2;
-    computer.y = canvas.height / 2 - PLAYER_HEIGHT / 2;
+    
+    // Supprimer cette ligne incorrecte:
+    // saveGameStats(playerScore, computerScore, currentDifficulty);
+    // La sauvegarde est déjà faite dans la fonction collide
 }
 
 // Réinitialisation du jeu avec la touche 'b'
@@ -776,6 +787,7 @@ window.addEventListener('keydown', (event) => {
             initializeGame();
         } else if (event.key === 'q') {
             // Retourner au menu principal
+            cleanupEventListeners();
             gameMode = 'single'; // Réinitialiser le mode
             selectMenu(menu, pong, currentFocus, menuItems);
             title.style.display = 'block'; // Affiche le titre
@@ -797,6 +809,10 @@ function initializeBackgroundGame() {
         return;
     }
 
+    // Définir les dimensions du canvas si nécessaire
+    bgCanvas.width = bgCanvas.clientWidth;
+    bgCanvas.height = bgCanvas.clientHeight;
+
     const bgGame = {
         player: { y: bgCanvas.height / 2 - PLAYER_HEIGHT / 2 },
         computer: { y: bgCanvas.height / 2 - PLAYER_HEIGHT / 2 },
@@ -808,22 +824,131 @@ function initializeBackgroundGame() {
         }
     };
 
+    // Fonction pour dessiner un paddle dans le background
+    function drawPaddle(ctx, x, y) {
+        ctx.fillStyle = COLORS.paddle;
+        ctx.fillRect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT);
+    }
+    
+    // Fonction pour dessiner la balle dans le background
+    function drawBall(ctx, ball) {
+        ctx.beginPath();
+        ctx.fillStyle = COLORS.ball;
+        ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    // Fonction pour dessiner la ligne du milieu dans le background
+    function drawMiddleLine(ctx) {
+        ctx.strokeStyle = COLORS.line;
+        ctx.beginPath();
+        ctx.moveTo(bgCanvas.width / 2, 0);
+        ctx.lineTo(bgCanvas.width / 2, bgCanvas.height);
+        ctx.setLineDash([10, 5]);
+        ctx.lineWidth = 5;
+        ctx.stroke();
+    }
+
+    // Fonction pour dessiner tous les éléments du background
     function drawBackground() {
         bgContext.fillStyle = COLORS.background;
         bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+        
+        // Dessiner la ligne du milieu
+        drawMiddleLine(bgContext);
+        
+        // Dessiner les paddles
         drawPaddle(bgContext, 10, bgGame.player.y);
         drawPaddle(bgContext, bgCanvas.width - PLAYER_WIDTH - 10, bgGame.computer.y);
+        
+        // Dessiner la balle
         drawBall(bgContext, bgGame.ball);
     }
-
+    
+    // Fonction pour déplacer la balle dans le background
+    function ballMove(game) {
+        const ball = game.ball;
+        
+        // Déplacer la balle
+        ball.x += ball.speed.x;
+        ball.y += ball.speed.y;
+        
+        // Collision avec les murs horizontaux (haut/bas)
+        if (ball.y <= 0 || ball.y >= bgCanvas.height) {
+            ball.speed.y *= -1;
+        }
+        
+        // Collision avec le paddle droit (ordinateur)
+        if (ball.x >= bgCanvas.width - PLAYER_WIDTH - 10) {
+            if (ball.y >= game.computer.y && ball.y <= game.computer.y + PLAYER_HEIGHT) {
+                // La balle frappe le paddle
+                ball.speed.x *= -1;
+                
+                // Ajuster la direction Y selon le point d'impact
+                const hitPosition = (ball.y - game.computer.y) / PLAYER_HEIGHT;
+                const angle = hitPosition * Math.PI / 2;
+                ball.speed.y = Math.sin(angle) * 3; // Ajustement plus doux pour le background
+            } else if (ball.x > bgCanvas.width) {
+                // La balle sort de l'écran à droite
+                resetBackgroundBall(game);
+            }
+        } 
+        // Collision avec le paddle gauche (joueur)
+        else if (ball.x <= PLAYER_WIDTH + 10) {
+            if (ball.y >= game.player.y && ball.y <= game.player.y + PLAYER_HEIGHT) {
+                // La balle frappe le paddle
+                ball.speed.x *= -1;
+                
+                // Ajuster la direction Y selon le point d'impact
+                const hitPosition = (ball.y - game.player.y) / PLAYER_HEIGHT;
+                const angle = hitPosition * Math.PI / 2;
+                ball.speed.y = Math.sin(angle) * 3; // Ajustement plus doux pour le background
+            } else if (ball.x < 0) {
+                // La balle sort de l'écran à gauche
+                resetBackgroundBall(game);
+            }
+        }
+    }
+    
+    // Fonction pour réinitialiser la balle dans le background
+    function resetBackgroundBall(game) {
+        game.ball.x = bgCanvas.width / 2;
+        game.ball.y = bgCanvas.height / 2;
+        game.ball.speed.x = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
+        game.ball.speed.y = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
+    }
+    
+    // Fonction pour déplacer les paddles IA dans le background
+    function moveBot(player, ball, canvasHeight) {
+        // Calculer la position cible (moins précise pour un effet de background)
+        const targetY = ball.y - PLAYER_HEIGHT / 2 + (Math.random() * 20 - 10);
+        const diff = targetY - player.y;
+        const speed = 3; // Vitesse adaptée pour l'animation de background
+        
+        // Déplacer le paddle vers la cible
+        player.y += Math.sign(diff) * Math.min(Math.abs(diff), speed);
+        
+        // S'assurer que le paddle reste dans les limites du canvas
+        player.y = Math.max(0, Math.min(player.y, canvasHeight - PLAYER_HEIGHT));
+    }
+    
+    // Fonction principale de mise à jour de l'animation de background
     function updateBackgroundGame() {
+        // Déplacer les paddles IA
         moveBot(bgGame.player, bgGame.ball, bgCanvas.height);
         moveBot(bgGame.computer, bgGame.ball, bgCanvas.height);
+        
+        // Déplacer la balle et gérer les collisions
         ballMove(bgGame);
+        
+        // Dessiner tous les éléments
         drawBackground();
+        
+        // Continuer l'animation
         requestAnimationFrame(updateBackgroundGame);
     }
-
+    
+    // Démarrer l'animation de background
     updateBackgroundGame();
 }
 
@@ -840,3 +965,66 @@ function moveBot(player, ball, canvasHeight) {
 document.addEventListener("DOMContentLoaded", function () {
     initializeBackgroundGame();
 });
+
+async function saveGameStats(gameData) {
+    try {
+        console.log('Saving game stats:', gameData);
+        
+        // Récupérer le token CSRF
+        const csrftoken = getCookie('csrftoken');
+        
+        // Mapper les différentes valeurs de difficulté
+        let difficultyValue = 'medium';
+        if (gameData.difficulty === 'es') difficultyValue = 'easy';
+        else if (gameData.difficulty === 'md') difficultyValue = 'medium';
+        else if (gameData.difficulty === 'hd') difficultyValue = 'hard';
+        
+        // Préparer les données à envoyer
+        const data = {
+            player_score: gameData.playerScore,
+            computer_score: gameData.computerScore,
+            difficulty: difficultyValue
+        };
+        
+        console.log('Sending data to server:', data);
+        
+        // Envoyer les données à l'API
+        const response = await fetch('/api/pong/save-stats/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data),
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Server error:', response.status, errorText);
+            throw new Error('Network response was not ok');
+        }
+        
+        const result = await response.json();
+        console.log('Game stats saved successfully:', result);
+        return result;
+    } catch (error) {
+        console.error('Error saving game stats:', error);
+    }
+}
+
+// Fonction pour récupérer un cookie (pour le CSRF token)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}

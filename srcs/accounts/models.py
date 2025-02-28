@@ -55,3 +55,33 @@ def create_user_profile(sender, instance, created, **kwargs):
 @receiver(post_save, sender=User)
 def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
+
+class GameStatistics(models.Model):
+    player = models.ForeignKey(User, on_delete=models.CASCADE)
+    date_played = models.DateTimeField(auto_now_add=True)
+    player_score = models.IntegerField(default=0)
+    computer_score = models.IntegerField(default=0)
+    DIFFICULTY_CHOICES = [
+        ('easy', 'Easy'),
+        ('medium', 'Medium'),
+        ('hard', 'Hard')
+    ]
+    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
+    is_perfect_game = models.BooleanField(default=False)  # Victoire sans encaisser de point
+
+    def __str__(self):
+        return f"{self.player.username} - {self.date_played.strftime('%Y-%m-%d %H:%M')}"
+
+    class Meta:
+        ordering = ['-date_played']
+
+class PlayerStats(models.Model):
+    player = models.OneToOneField(User, on_delete=models.CASCADE)
+    total_games = models.IntegerField(default=0)
+    games_won = models.IntegerField(default=0)
+    games_lost = models.IntegerField(default=0)
+    perfect_games = models.IntegerField(default=0)
+    win_ratio = models.FloatField(default=0.0)
+
+    def __str__(self):
+        return f"Stats for {self.player.username}"

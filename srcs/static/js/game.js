@@ -1,4 +1,4 @@
-// game.js - Logique principale du jeu Pong
+// game.js - Logique complète du jeu Pong en SPA avec intégration Django
 
 export class PongGame {
     constructor(canvasId) {
@@ -9,104 +9,15 @@ export class PongGame {
         }
         this.context = this.canvas.getContext('2d');
         this.initGame();
+        this.initCanvasUI();
         this.bindEvents();
-        document.addEventListener("game:start", () => this.play());
-    }
-
-    initGame() {
-        this.PLAYER_HEIGHT = 80;
-        this.PLAYER_WIDTH = 4;
-        this.BALL_RADIUS = 5;
-        this.BALL_SPEED = 2;
-        this.PLAYER_SPEED = 5;
-        this.winnerScore = 3;
-
-        this.resetGame();
-    }
-
-    resetGame() {
-        this.isGameOver = false;
-        this.gameData = {
-            player: { y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2, score: 0 },
-            computer: { y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2, score: 0 },
-            ball: {
-                x: this.canvas.width / 2,
-                y: this.canvas.height / 2,
-                speedX: this.BALL_SPEED * (Math.random() > 0.5 ? 1 : -1),
-                speedY: this.BALL_SPEED * (Math.random() > 0.5 ? 1 : -1)
-            }
-        };
-    }
-
-    bindEvents() {
-        document.addEventListener('keydown', (event) => this.handleKeyDown(event));
-        document.addEventListener('keyup', (event) => this.handleKeyUp(event));
-    }
-
-    handleKeyDown(event) {
-        if (event.key === 'w') this.isUpPressed = true;
-        if (event.key === 's') this.isDownPressed = true;
-    }
-
-    handleKeyUp(event) {
-        if (event.key === 'w') this.isUpPressed = false;
-        if (event.key === 's') this.isDownPressed = false;
-    }
-
-    movePlayer() {
-        if (this.isUpPressed) this.gameData.player.y = Math.max(0, this.gameData.player.y - this.PLAYER_SPEED);
-        if (this.isDownPressed) this.gameData.player.y = Math.min(this.canvas.height - this.PLAYER_HEIGHT, this.gameData.player.y + this.PLAYER_SPEED);
-    }
-
-    moveBall() {
-        let ball = this.gameData.ball;
-        ball.x += ball.speedX;
-        ball.y += ball.speedY;
-
-        if (ball.y <= 0 || ball.y >= this.canvas.height) {
-            ball.speedY *= -1;
-        }
-    }
-
-    draw() {
-        let ctx = this.context;
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        ctx.fillStyle = "white";
-        ctx.fillRect(10, this.gameData.player.y, this.PLAYER_WIDTH, this.PLAYER_HEIGHT);
-        ctx.fillRect(this.canvas.width - this.PLAYER_WIDTH - 10, this.gameData.computer.y, this.PLAYER_WIDTH, this.PLAYER_HEIGHT);
-        ctx.beginPath();
-        ctx.arc(this.gameData.ball.x, this.gameData.ball.y, this.BALL_RADIUS, 0, Math.PI * 2);
-        ctx.fill();
+        // Pour l'intégration avec Django
+        this.apiClient = null;
     }
-
-    play() {
-        if (!this.isGameOver) {
-            this.movePlayer();
-            this.moveBall();
-            this.draw();
-            requestAnimationFrame(() => this.play());
-        }
-    }
-
     
-}
-
-//////////////////////////
-
-// game.js - Logique complète du jeu Pong avec menus
-
-export class PongGame {
-    constructor(canvasId) {
-        this.canvas = document.getElementById(canvasId);
-        if (!this.canvas) {
-            console.error("Canvas not found!");
-            return;
-        }
-        this.context = this.canvas.getContext('2d');
-        this.initGame();
-        this.initMenuSystem();
-        this.bindEvents();
+    setApiClient(apiClient) {
+        this.apiClient = apiClient;
     }
 
     initGame() {
@@ -124,81 +35,292 @@ export class PongGame {
         this.gameMode = 'single'; // 'single' ou 'multi'
         this.difficulty = 'medium'; // 'easy', 'medium', 'hard'
         
-        // Statistiques
-        this.stats = this.loadStats() || {
+        // État du jeu
+        this.currentState = 'splash'; // 'splash', 'menu', 'playing', 'paused', 'gameover'
+        
+        // Statistiques locales (seront synchronisées avec le backend)
+        this.stats = {
             totalGames: 0,
             playerWins: 0,
             computerWins: 0,
             perfectPlayerGames: 0,
-            perfectComputerGames: 0,
             recentGames: []
         };
-
+        
         this.resetGame();
     }
-
-    loadStats() {
-        const savedStats = localStorage.getItem('pongStats');
-        return savedStats ? JSON.parse(savedStats) : null;
-    }
-
-    saveStats() {
-        localStorage.setItem('pongStats', JSON.stringify(this.stats));
-        this.updateStatsDisplay();
-    }
-
-    updateStatsDisplay() {
-        // Mettre à jour les éléments du DOM pour les statistiques
-        document.getElementById('totalGames').textContent = this.stats.totalGames;
-        document.getElementById('totalPlayerScore').textContent = this.stats.playerWins;
-        document.getElementById('totalComputerScore').textContent = this.stats.computerWins;
-        
-        const winRatio = this.stats.totalGames > 0 
-            ? ((this.stats.playerWins / this.stats.totalGames) * 100).toFixed(1) 
-            : 0;
-        document.getElementById('winRatio').textContent = `${winRatio}%`;
-        
-        document.getElementById('perfectPlayer').textContent = this.stats.perfectPlayerGames;
-        document.getElementById('perfectComputer').textContent = this.stats.perfectComputerGames;
-        
-        // Afficher les dernières parties
-        const lastGamesElement = document.getElementById('lastGames');
-        lastGamesElement.innerHTML = '';
-        
-        this.stats.recentGames.slice(0, 5).forEach(game => {
-            const li = document.createElement('li');
-            li.textContent = `${game.date}: Joueur ${game.playerScore} - ${game.computerScore} Ordinateur`;
-            lastGamesElement.appendChild(li);
-        });
-    }
-
-    initMenuSystem() {
-        // États des menus
-        this.currentMenu = null;
-        this.selectedMenuIndex = 0;
-        
-        // Éléments du menu
-        this.menuElements = {
-            mainMenu: document.getElementById('menu'),
-            modeMenu: document.getElementById('menuMode'),
-            difficultyMenu: document.getElementById('menuDifficulty'),
-            infoMenu: document.getElementById('menuInfo'),
-            gameStats: document.getElementById('gameStats'),
-            insertCoin: document.getElementById('menuLink'),
-            firstInstruct: document.getElementById('firstInstruct'),
-            secondInstruct: document.getElementById('secondInstruct')
+    
+    initCanvasUI() {
+        // Tous les UI elements seront désormais dessinés sur le canvas
+        this.uiElements = {
+            // Définition des zones cliquables (boutons)
+            buttons: {
+                mainMenu: [
+                    { id: 'pButton', text: 'Jouer', x: this.canvas.width/2 - 100, y: 160, width: 200, height: 40 },
+                    { id: 'sButton', text: 'Difficulté', x: this.canvas.width/2 - 100, y: 210, width: 200, height: 40 },
+                    { id: 'iButton', text: 'Info', x: this.canvas.width/2 - 100, y: 260, width: 200, height: 40 },
+                    { id: 'qButton', text: 'Quitter', x: this.canvas.width/2 - 100, y: 310, width: 200, height: 40 }
+                ],
+                modeMenu: [
+                    { id: 'siButton', text: 'Solo', x: this.canvas.width/2 - 100, y: 160, width: 200, height: 40 },
+                    { id: 'muButton', text: 'Multi', x: this.canvas.width/2 - 100, y: 210, width: 200, height: 40 },
+                    { id: 'qmButton', text: 'Retour', x: this.canvas.width/2 - 100, y: 260, width: 200, height: 40 }
+                ],
+                difficultyMenu: [
+                    { id: 'esButton', text: 'Facile', x: this.canvas.width/2 - 100, y: 160, width: 200, height: 40 },
+                    { id: 'mdButton', text: 'Moyen', x: this.canvas.width/2 - 100, y: 210, width: 200, height: 40 },
+                    { id: 'hdButton', text: 'Difficile', x: this.canvas.width/2 - 100, y: 260, width: 200, height: 40 },
+                    { id: 'qdButton', text: 'Retour', x: this.canvas.width/2 - 100, y: 310, width: 200, height: 40 }
+                ]
+            },
+            // Info-bulle qui sera dessinée sur le canvas
+            infoBubble: {
+                visible: false,
+                x: this.canvas.width/2 - 150,
+                y: 150,
+                width: 300,
+                height: 200,
+                text: "Pong est l'un des premiers jeux vidéo arcade, créé par Atari en 1972. Utilisez les touches ↑ et ↓ pour déplacer votre raquette."
+            },
+            // Statistiques qui seront dessinées sur le canvas
+            statsView: {
+                visible: false,
+                x: this.canvas.width/2 - 200,
+                y: 100,
+                width: 400,
+                height: 300
+            }
         };
         
-        // Configurer le texte d'info
-        document.getElementById('info1').textContent = 
-            "Pong est l'un des premiers jeux vidéo arcade, créé par Atari en 1972. " +
-            "Utilisez les touches ↑ et ↓ pour déplacer votre raquette.";
+        // Pour la sélection des boutons
+        this.activeMenuName = 'mainMenu';
+        this.selectedButtonIndex = 0;
+        
+        // Gestion du clic sur le canvas
+        this.canvas.addEventListener('click', (event) => this.handleCanvasClick(event));
+    }
+
+    handleCanvasClick(event) {
+        // Obtenir les coordonnées réelles par rapport au canvas
+        const rect = this.canvas.getBoundingClientRect();
+        const scaleX = this.canvas.width / rect.width;
+        const scaleY = this.canvas.height / rect.height;
+        const x = (event.clientX - rect.left) * scaleX;
+        const y = (event.clientY - rect.top) * scaleY;
+        
+        // Si on est dans un menu, vérifier si un bouton a été cliqué
+        if (this.currentState === 'menu') {
+            const buttons = this.uiElements.buttons[this.activeMenuName];
+            
+            for (let i = 0; i < buttons.length; i++) {
+                const button = buttons[i];
+                
+                if (x >= button.x && x <= button.x + button.width && 
+                    y >= button.y && y <= button.y + button.height) {
+                    
+                    // Simuler le clic sur le bouton
+                    this.handleButtonClick(button.id);
+                    break;
+                }
+            }
+        }
+        
+        // Pour l'info-bulle
+        if (this.uiElements.infoBubble.visible) {
+            const bubble = this.uiElements.infoBubble;
+            
+            // Bouton fermer (coin supérieur droit de la bulle)
+            if (x >= bubble.x + bubble.width - 30 && x <= bubble.x + bubble.width - 10 &&
+                y >= bubble.y + 10 && y <= bubble.y + 30) {
+                this.uiElements.infoBubble.visible = false;
+                this.uiElements.statsView.visible = false;
+                return;
+            }
+            
+            // Bouton "plus d'info" en bas de la bulle
+            if (x >= bubble.x + bubble.width/2 - 50 && x <= bubble.x + bubble.width/2 + 50 &&
+                y >= bubble.y + bubble.height - 40 && y <= bubble.y + bubble.height - 10) {
+                this.uiElements.statsView.visible = true;
+                // Si API disponible, charger les stats
+                if (this.apiClient) {
+                    this.apiClient.getPlayerStats().then(stats => {
+                        this.stats = stats;
+                    });
+                }
+                return;
+            }
+        }
+        
+        // En mode splash screen, cliquer n'importe où lance le menu
+        if (this.currentState === 'splash') {
+            this.currentState = 'menu';
+            this.activeMenuName = 'mainMenu';
+            this.selectedButtonIndex = 0;
+        }
+    }
+    
+    handleButtonClick(buttonId) {
+        switch (buttonId) {
+            // Menu principal
+            case 'pButton':
+                this.activeMenuName = 'modeMenu';
+                this.selectedButtonIndex = 0;
+                break;
+            case 'sButton':
+                this.activeMenuName = 'difficultyMenu';
+                this.selectedButtonIndex = 0;
+                break;
+            case 'iButton':
+                this.uiElements.infoBubble.visible = true;
+                break;
+            case 'qButton':
+                this.currentState = 'splash';
+                break;
+                
+            // Menu mode
+            case 'siButton':
+                this.gameMode = 'single';
+                this.startGame();
+                break;
+            case 'muButton':
+                this.gameMode = 'multi';
+                this.startGame();
+                break;
+            case 'qmButton':
+                this.activeMenuName = 'mainMenu';
+                this.selectedButtonIndex = 0;
+                break;
+                
+            // Menu difficulté
+            case 'esButton':
+                this.difficulty = 'easy';
+                this.activeMenuName = 'mainMenu';
+                this.selectedButtonIndex = 0;
+                break;
+            case 'mdButton':
+                this.difficulty = 'medium';
+                this.activeMenuName = 'mainMenu';
+                this.selectedButtonIndex = 0;
+                break;
+            case 'hdButton':
+                this.difficulty = 'hard';
+                this.activeMenuName = 'mainMenu';
+                this.selectedButtonIndex = 0;
+                break;
+            case 'qdButton':
+                this.activeMenuName = 'mainMenu';
+                this.selectedButtonIndex = 0;
+                break;
+        }
+    }
+
+    bindEvents() {
+        // Contrôles du jeu
+        document.addEventListener('keydown', (event) => this.handleKeyDown(event));
+        document.addEventListener('keyup', (event) => this.handleKeyUp(event));
+    }
+
+    handleKeyDown(event) {
+        // Navigation dans les menus
+        if (this.currentState === 'menu') {
+            switch (event.key) {
+                case 'ArrowUp':
+                    this.selectedButtonIndex = (this.selectedButtonIndex - 1 + this.uiElements.buttons[this.activeMenuName].length) % this.uiElements.buttons[this.activeMenuName].length;
+                    event.preventDefault();
+                    break;
+                case 'ArrowDown':
+                    this.selectedButtonIndex = (this.selectedButtonIndex + 1) % this.uiElements.buttons[this.activeMenuName].length;
+                    event.preventDefault();
+                    break;
+                case ' ':
+                case 'Enter':
+                    const selectedButton = this.uiElements.buttons[this.activeMenuName][this.selectedButtonIndex];
+                    this.handleButtonClick(selectedButton.id);
+                    event.preventDefault();
+                    break;
+                case 'Escape':
+                    if (this.activeMenuName !== 'mainMenu') {
+                        this.activeMenuName = 'mainMenu';
+                        this.selectedButtonIndex = 0;
+                    } else {
+                        this.currentState = 'splash';
+                    }
+                    event.preventDefault();
+                    break;
+            }
+        }
+        
+        // Fermer l'info-bulle avec Escape
+        if (this.uiElements.infoBubble.visible && event.key === 'Escape') {
+            this.uiElements.infoBubble.visible = false;
+            this.uiElements.statsView.visible = false;
+            event.preventDefault();
+            return;
+        }
+        
+        // Contrôles du jeu
+        if (this.currentState === 'playing') {
+            if (event.key === 'w' || event.key === 'ArrowUp') this.isUpPressed = true;
+            if (event.key === 's' || event.key === 'ArrowDown') this.isDownPressed = true;
+            
+            // Contrôles pour le joueur 2 en mode multi
+            if (this.gameMode === 'multi') {
+                if (event.key === 'o') this.isPlayer2UpPressed = true;
+                if (event.key === 'l') this.isPlayer2DownPressed = true;
+            }
+            
+            // Pause
+            if (event.key === 'p') {
+                if (this.currentState === 'playing') {
+                    this.currentState = 'paused';
+                } else if (this.currentState === 'paused') {
+                    this.currentState = 'playing';
+                    this.play();
+                }
+            }
+            
+            // Echap pour retourner au menu
+            if (event.key === 'Escape') {
+                this.currentState = 'menu';
+                this.activeMenuName = 'mainMenu';
+                this.selectedButtonIndex = 0;
+            }
+        }
+        
+        // Depuis l'écran de fin
+        if (this.currentState === 'gameover') {
+            if (event.key === 'r') {
+                this.resetGame();
+                this.startGame();
+            }
+            
+            if (event.key === 'Escape') {
+                this.currentState = 'menu';
+                this.activeMenuName = 'mainMenu';
+                this.selectedButtonIndex = 0;
+            }
+        }
+    }
+
+    handleKeyUp(event) {
+        if (event.key === 'w' || event.key === 'ArrowUp') this.isUpPressed = false;
+        if (event.key === 's' || event.key === 'ArrowDown') this.isDownPressed = false;
+        
+        if (this.gameMode === 'multi') {
+            if (event.key === 'o') this.isPlayer2UpPressed = false;
+            if (event.key === 'l') this.isPlayer2DownPressed = false;
+        }
+    }
+
+    startGame() {
+        this.resetGame();
+        this.currentState = 'playing';
+        this.play();
     }
 
     resetGame() {
         this.isGameOver = false;
         this.winner = null;
-        this.isPaused = false;
         
         // Ajuster les paramètres en fonction de la difficulté
         switch (this.difficulty) {
@@ -219,7 +341,6 @@ export class PongGame {
         this.gameData = {
             player: { y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2, score: 0 },
             computer: { y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2, score: 0 },
-            player2: { y: this.canvas.height / 2 - this.PLAYER_HEIGHT / 2 }, // Pour le mode multi
             ball: {
                 x: this.canvas.width / 2,
                 y: this.canvas.height / 2,
@@ -229,238 +350,27 @@ export class PongGame {
         };
     }
 
-    bindEvents() {
-        // Contrôles du jeu
-        document.addEventListener('keydown', (event) => this.handleKeyDown(event));
-        document.addEventListener('keyup', (event) => this.handleKeyUp(event));
-        
-        // Bouton Insert Coin
-        this.menuElements.insertCoin.addEventListener('click', () => this.showMenu('mainMenu'));
-        
-        // Boutons du menu principal
-        document.getElementById('pButton').addEventListener('click', () => this.showMenu('modeMenu'));
-        document.getElementById('sButton').addEventListener('click', () => this.showMenu('difficultyMenu'));
-        document.getElementById('iButton').addEventListener('click', () => this.showMenu('infoMenu'));
-        document.getElementById('qButton').addEventListener('click', () => this.hideAllMenus());
-        
-        // Boutons du menu mode
-        document.getElementById('siButton').addEventListener('click', () => {
-            this.gameMode = 'single';
-            this.startGame();
-        });
-        document.getElementById('muButton').addEventListener('click', () => {
-            this.gameMode = 'multi';
-            this.startGame();
-        });
-        document.getElementById('qmButton').addEventListener('click', () => this.showMenu('mainMenu'));
-        
-        // Boutons du menu difficulté
-        document.getElementById('esButton').addEventListener('click', () => {
-            this.difficulty = 'easy';
-            this.showMenu('mainMenu');
-        });
-        document.getElementById('mdButton').addEventListener('click', () => {
-            this.difficulty = 'medium';
-            this.showMenu('mainMenu');
-        });
-        document.getElementById('hdButton').addEventListener('click', () => {
-            this.difficulty = 'hard';
-            this.showMenu('mainMenu');
-        });
-        document.getElementById('qdButton').addEventListener('click', () => this.showMenu('mainMenu'));
-        
-        // Boutons du menu info
-        document.getElementById('moreBubble').addEventListener('click', () => this.showMenu('gameStats'));
-        document.getElementById('closeBubble').addEventListener('click', () => this.showMenu('mainMenu'));
-    }
-
-    showMenu(menuName) {
-        // Cacher tous les menus d'abord
-        this.hideAllMenus();
-        
-        // Afficher le menu demandé
-        if (this.menuElements[menuName]) {
-            this.menuElements[menuName].classList.remove('hidden');
-            this.currentMenu = menuName;
-            
-            // Afficher les instructions de navigation
-            if (menuName !== 'gameStats') {
-                this.menuElements.secondInstruct.classList.remove('hidden');
-            }
-            
-            // Si on affiche les stats, les mettre à jour
-            if (menuName === 'gameStats') {
-                this.updateStatsDisplay();
-            }
-            
-            // Réinitialiser la sélection
-            this.selectedMenuIndex = 0;
-            this.updateMenuSelection();
-        }
-    }
-
-    hideAllMenus() {
-        // Cacher tous les menus
-        for (const key in this.menuElements) {
-            if (key !== 'insertCoin' && key !== 'firstInstruct') {
-                this.menuElements[key].classList.add('hidden');
-            }
-        }
-        this.currentMenu = null;
-    }
-
-    updateMenuSelection() {
-        if (!this.currentMenu) return;
-        
-        const currentMenuElement = this.menuElements[this.currentMenu];
-        const buttons = currentMenuElement.querySelectorAll('button');
-        
-        // Retirer la classe active de tous les boutons
-        buttons.forEach(btn => btn.classList.remove('active'));
-        
-        // Ajouter la classe active au bouton sélectionné
-        if (buttons[this.selectedMenuIndex]) {
-            buttons[this.selectedMenuIndex].classList.add('active');
-        }
-    }
-
-    navigateMenu(direction) {
-        if (!this.currentMenu) return;
-        
-        const currentMenuElement = this.menuElements[this.currentMenu];
-        const buttons = currentMenuElement.querySelectorAll('button');
-        
-        if (direction === 'up') {
-            this.selectedMenuIndex = (this.selectedMenuIndex - 1 + buttons.length) % buttons.length;
-        } else if (direction === 'down') {
-            this.selectedMenuIndex = (this.selectedMenuIndex + 1) % buttons.length;
-        }
-        
-        this.updateMenuSelection();
-    }
-
-    selectCurrentMenuItem() {
-        if (!this.currentMenu) return;
-        
-        const currentMenuElement = this.menuElements[this.currentMenu];
-        const buttons = currentMenuElement.querySelectorAll('button');
-        
-        if (buttons[this.selectedMenuIndex]) {
-            buttons[this.selectedMenuIndex].click();
-        }
-    }
-
-    handleKeyDown(event) {
-        // Navigation dans les menus
-        if (this.currentMenu) {
-            switch (event.key) {
-                case 'ArrowUp':
-                    this.navigateMenu('up');
-                    event.preventDefault();
-                    break;
-                case 'ArrowDown':
-                    this.navigateMenu('down');
-                    event.preventDefault();
-                    break;
-                case ' ':
-                case 'Enter':
-                    this.selectCurrentMenuItem();
-                    event.preventDefault();
-                    break;
-                case 'Escape':
-                    if (this.currentMenu !== 'mainMenu') {
-                        this.showMenu('mainMenu');
-                    } else {
-                        this.hideAllMenus();
-                    }
-                    event.preventDefault();
-                    break;
-            }
-        }
-        
-        // Contrôles du jeu
-        if (this.gameActive) {
-            if (event.key === 'w' || event.key === 'ArrowUp') this.isUpPressed = true;
-            if (event.key === 's' || event.key === 'ArrowDown') this.isDownPressed = true;
-            
-            // Contrôles pour le joueur 2 en mode multi
-            if (this.gameMode === 'multi') {
-                if (event.key === 'o') this.isPlayer2UpPressed = true;
-                if (event.key === 'l') this.isPlayer2DownPressed = true;
-            }
-            
-            // Pause
-            if (event.key === 'p') {
-                this.isPaused = !this.isPaused;
-                if (!this.isPaused) {
-                    this.play();
-                }
-            }
-            
-            // Recommencer une partie
-            if (event.key === 'r' && this.isGameOver) {
-                this.resetGame();
-                this.play();
-            }
-        }
-    }
-
-    handleKeyUp(event) {
-        if (event.key === 'w' || event.key === 'ArrowUp') this.isUpPressed = false;
-        if (event.key === 's' || event.key === 'ArrowDown') this.isDownPressed = false;
-        
-        if (this.gameMode === 'multi') {
-            if (event.key === 'o') this.isPlayer2UpPressed = false;
-            if (event.key === 'l') this.isPlayer2DownPressed = false;
-        }
-    }
-
-    startGame() {
-        this.hideAllMenus();
-        this.resetGame();
-        this.gameActive = true;
-        this.play();
-    }
-
     endGame() {
-        this.gameActive = false;
-        this.isGameOver = true;
+        this.currentState = 'gameover';
         
-        // Mettre à jour les statistiques
-        this.stats.totalGames++;
-        
-        if (this.winner === 'player') {
-            this.stats.playerWins++;
-            if (this.gameData.computer.score === 0) {
-                this.stats.perfectPlayerGames++;
-            }
-        } else {
-            this.stats.computerWins++;
-            if (this.gameData.player.score === 0) {
-                this.stats.perfectComputerGames++;
-            }
+        // Si connecté avec le backend, enregistrer les stats
+        if (this.apiClient) {
+            const gameData = {
+                player_score: this.gameData.player.score,
+                computer_score: this.gameData.computer.score,
+                difficulty: this.difficulty
+            };
+            
+            this.apiClient.saveGameStats(gameData).then(() => {
+                // Recharger les stats mises à jour
+                return this.apiClient.getPlayerStats();
+            }).then(stats => {
+                this.stats = stats;
+            });
         }
-        
-        // Ajouter cette partie à l'historique
-        const now = new Date();
-        const dateStr = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
-        
-        this.stats.recentGames.unshift({
-            date: dateStr,
-            playerScore: this.gameData.player.score,
-            computerScore: this.gameData.computer.score,
-            difficulty: this.difficulty
-        });
-        
-        // Garder seulement les 10 dernières parties
-        if (this.stats.recentGames.length > 10) {
-            this.stats.recentGames.pop();
-        }
-        
-        // Sauvegarder les stats
-        this.saveStats();
     }
 
+    // Méthodes de jeu (restent similaires)
     movePlayer() {
         if (this.isUpPressed) this.gameData.player.y = Math.max(0, this.gameData.player.y - this.PLAYER_SPEED);
         if (this.isDownPressed) this.gameData.player.y = Math.min(this.canvas.height - this.PLAYER_HEIGHT, this.gameData.player.y + this.PLAYER_SPEED);
@@ -570,104 +480,564 @@ export class PongGame {
         ball.y += ball.speedY;
     }
 
+    // Méthode principale de dessin qui gère tous les états de l'interface
     draw() {
-        let ctx = this.context;
+        const ctx = this.context;
         // Effacer le canvas
         ctx.fillStyle = "black";
         ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Dessiner la ligne centrale
+        // Dessiner en fonction de l'état du jeu
+        switch (this.currentState) {
+            case 'splash':
+                this.drawSplashScreen(ctx);
+                break;
+            case 'menu':
+                this.drawMenu(ctx);
+                break;
+            case 'playing':
+                this.drawGame(ctx);
+                break;
+            case 'paused':
+                this.drawGame(ctx);
+                this.drawPauseScreen(ctx);
+                break;
+            case 'gameover':
+                this.drawGame(ctx);
+                this.drawGameOverScreen(ctx);
+                break;
+        }
+        
+        // Dessiner l'info-bulle si elle est visible
+        if (this.uiElements.infoBubble.visible) {
+            this.drawInfoBubble(ctx);
+        }
+    }
+    
+    drawSplashScreen(ctx) {
+        ctx.fillStyle = "white";
+        ctx.font = "48px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("PONG", this.canvas.width / 2, this.canvas.height / 3);
+        
+        ctx.font = "24px Arial";
+        ctx.fillText("Cliquez pour commencer", this.canvas.width / 2, this.canvas.height / 2);
+        
+        ctx.font = "16px Arial";
+        ctx.fillText("© 2025 MonApp", this.canvas.width / 2, this.canvas.height - 30);
+        ctx.textAlign = "start";
+    }
+    
+    drawMenu(ctx) {
+        ctx.fillStyle = "white";
+        ctx.font = "36px Arial";
+        ctx.textAlign = "center";
+        
+        let title = "";
+        switch(this.activeMenuName) {
+            case 'mainMenu': title = "Menu Principal"; break;
+            case 'modeMenu': title = "Mode de Jeu"; break;
+            case 'difficultyMenu': title = "Difficulté"; break;
+        }
+        
+        ctx.fillText(title, this.canvas.width / 2, 100);
+        
+        // Dessiner les boutons du menu actif
+        const buttons = this.uiElements.buttons[this.activeMenuName];
+        
+        buttons.forEach((button, index) => {
+            // Bouton sélectionné en surbrillance
+            if (index === this.selectedButtonIndex) {
+                ctx.fillStyle = "#4286f4";
+            } else {
+                ctx.fillStyle = "#555555";
+            }
+            
+            // Rectangle du bouton
+            ctx.fillRect(button.x, button.y, button.width, button.height);
+            
+            // Texte du bouton
+            ctx.fillStyle = "white";
+            ctx.font = "20px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(button.text, button.x + button.width/2, button.y + button.height/2 + 6);
+        });
+        
+        // Indication difficulté actuelle
+        if (this.activeMenuName === 'mainMenu') {
+            ctx.font = "16px Arial";
+            ctx.fillText(`Difficulté actuelle: ${this.getDifficultyText()}`, this.canvas.width / 2, 380);
+        }
+        
+        ctx.textAlign = "start";
+    }
+    
+    getDifficultyText() {
+        switch(this.difficulty) {
+            case 'easy': return 'Facile';
+            case 'medium': return 'Moyen';
+            case 'hard': return 'Difficile';
+            default: return 'Moyen';
+        }
+    }
+    
+    drawInfoBubble(ctx) {
+        const bubble = this.uiElements.infoBubble;
+        
+        // Fond semi-transparent
+        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Bulle d'info
+        ctx.fillStyle = "#333333";
+        ctx.fillRect(bubble.x, bubble.y, bubble.width, bubble.height);
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bubble.x, bubble.y, bubble.width, bubble.height);
+        
+        // Texte
+        ctx.fillStyle = "white";
+        ctx.font = "16px Arial";
+        ctx.textAlign = "center";
+        
+        // Titre
+        ctx.fillText("Information", bubble.x + bubble.width/2, bubble.y + 30);
+        
+        // Contenu
+        ctx.font = "14px Arial";
+        ctx.textAlign = "left";
+        
+        // Découper le texte en lignes
+        const maxWidth = bubble.width - 40;
+        const words = bubble.text.split(' ');
+        let line = '';
+        let lines = [];
+        
+        for(let n = 0; n < words.length; n++) {
+            const testLine = line + words[n] + ' ';
+            const metrics = ctx.measureText(testLine);
+            const testWidth = metrics.width;
+            
+            if (testWidth > maxWidth && n > 0) {
+                lines.push(line);
+                line = words[n] + ' ';
+            } else {
+                line = testLine;
+            }
+        }
+        lines.push(line);
+        
+        // Dessiner les lignes
+        let y = bubble.y + 60;
+        lines.forEach(line => {
+            ctx.fillText(line, bubble.x + 20, y);
+            y += 20;
+        });
+        
+        // Bouton "Fermer"
+        ctx.fillStyle = "#ff5555";
+        ctx.fillRect(bubble.x + bubble.width - 30, bubble.y + 10, 20, 20);
+        ctx.fillStyle = "white";
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("X", bubble.x + bubble.width - 20, bubble.y + 25);
+        
+        // Bouton "Statistiques"
+        if (this.uiElements.statsView.visible) {
+            this.drawStats(ctx);
+        } else {
+            ctx.fillStyle = "#4286f4";
+            ctx.fillRect(bubble.x + bubble.width/2 - 50, bubble.y + bubble.height - 40, 100, 30);
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.fillText("Statistiques", bubble.x + bubble.width/2, bubble.y + bubble.height - 20);
+        }
+        
+        ctx.textAlign = "start";
+    }
+    
+    drawStats(ctx) {
+        const stats = this.uiElements.statsView;
+        
+        // Fond de la vue stats
+        ctx.fillStyle = "#222222";
+        ctx.fillRect(stats.x, stats.y, stats.width, stats.height);
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(stats.x, stats.y, stats.width, stats.height);
+        
+        // Titre
+        ctx.fillStyle = "white";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("Statistiques du joueur", stats.x + stats.width/2, stats.y + 30);
+        
+        // Stats
+        ctx.font = "16px Arial";
+        ctx.textAlign = "left";
+        
+        const lineHeight = 28;
+        let y = stats.y + 70;
+        
+        ctx.fillText(`Parties jouées: ${this.stats.totalGames}`, stats.x + 20, y);
+        y += lineHeight;
+        ctx.fillText(`Victoires: ${this.stats.playerWins}`, stats.x + 20, y);
+        y += lineHeight;
+        ctx.fillText(`Défaites: ${this.stats.computerWins}`, stats.x + 20, y);
+        y += lineHeight;
+        ctx.fillText(`Parties parfaites: ${this.stats.perfectPlayerGames}`, stats.x + 20, y);
+        y += lineHeight;
+        
+        // Taux de victoire
+        const winRate = this.stats.totalGames > 0 ? 
+            Math.round((this.stats.playerWins / this.stats.totalGames) * 100) : 0;
+        ctx.fillText(`Taux de victoire: ${winRate}%`, stats.x + 20, y);
+        
+        // Dernières parties
+        y += lineHeight * 1.5;
+        ctx.fillText("Dernières parties:", stats.x + 20, y);
+        y += lineHeight * 0.8;
+        
+        if (this.stats.recentGames.length === 0) {
+            ctx.fillText("Aucune partie récente", stats.x + 20, y);
+        } else {
+            this.stats.recentGames.slice(0, 3).forEach((game, index) => {
+                const result = game.playerWon ? "Victoire" : "Défaite";
+                const score = `${game.playerScore}-${game.computerScore}`;
+                ctx.fillText(`${index+1}. ${result} (${score}) - ${game.difficulty}`, stats.x + 20, y);
+                y += lineHeight * 0.8;
+            });
+        }
+    }
+    
+    drawGame(ctx) {
+        // Ligne médiane
+        ctx.setLineDash([5, 5]);
         ctx.strokeStyle = "white";
         ctx.beginPath();
-        ctx.setLineDash([5, 15]);
         ctx.moveTo(this.canvas.width / 2, 0);
         ctx.lineTo(this.canvas.width / 2, this.canvas.height);
         ctx.stroke();
         ctx.setLineDash([]);
-
-        // Dessiner les raquettes
+        
+        // Dessiner les scores
         ctx.fillStyle = "white";
-        ctx.fillRect(10, this.gameData.player.y, this.PLAYER_WIDTH, this.PLAYER_HEIGHT);
-        ctx.fillRect(this.canvas.width - this.PLAYER_WIDTH - 10, this.gameData.computer.y, this.PLAYER_WIDTH, this.PLAYER_HEIGHT);
+        ctx.font = "48px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(this.gameData.player.score, this.canvas.width / 4, 50);
+        ctx.fillText(this.gameData.computer.score, 3 * this.canvas.width / 4, 50);
+        
+        // Dessiner les raquettes
+        // Joueur
+        ctx.fillRect(
+            10, 
+            this.gameData.player.y, 
+            this.PLAYER_WIDTH, 
+            this.PLAYER_HEIGHT
+        );
+        
+        // Ordinateur/Joueur 2
+        ctx.fillRect(
+            this.canvas.width - this.PLAYER_WIDTH - 10, 
+            this.gameData.computer.y, 
+            this.PLAYER_WIDTH, 
+            this.PLAYER_HEIGHT
+        );
         
         // Dessiner la balle
         ctx.beginPath();
-        ctx.arc(this.gameData.ball.x, this.gameData.ball.y, this.BALL_RADIUS, 0, Math.PI * 2);
+        ctx.arc(
+            this.gameData.ball.x, 
+            this.gameData.ball.y, 
+            this.BALL_RADIUS, 
+            0, 
+            Math.PI * 2
+        );
         ctx.fill();
-
-        // Afficher le score
-        ctx.font = "30px Arial";
-        ctx.fillText(this.gameData.player.score, this.canvas.width / 4, 50);
-        ctx.fillText(this.gameData.computer.score, 3 * this.canvas.width / 4, 50);
-
-        // Afficher la difficulté en cours
-        ctx.font = "14px Arial";
-        ctx.fillText(`Difficulté: ${this.difficulty}`, 10, this.canvas.height - 10);
-        ctx.fillText(`Mode: ${this.gameMode === 'single' ? 'Solo' : 'Multi'}`, this.canvas.width - 120, this.canvas.height - 10);
-
-        // Afficher un message si le jeu est en pause
-        if (this.isPaused) {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-            ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            ctx.fillStyle = "white";
-            ctx.font = "36px Arial";
-            ctx.textAlign = "center";
-            ctx.fillText("PAUSE", this.canvas.width / 2, this.canvas.height / 2);
-            ctx.font = "18px Arial";
-            ctx.fillText("Appuyez sur 'P' pour continuer", this.canvas.width / 2, this.canvas.height / 2 + 40);
-            ctx.textAlign = "start";
+        
+        // Indication du mode en cours
+        ctx.font = "16px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(`Mode: ${this.gameMode === 'single' ? 'Solo' : 'Multi'}`, 10, this.canvas.height - 10);
+        
+        // Indication de la difficulté
+        if (this.gameMode === 'single') {
+            ctx.textAlign = "right";
+            ctx.fillText(`Difficulté: ${this.getDifficultyText()}`, this.canvas.width - 10, this.canvas.height - 10);
         }
-
-        // Afficher un message si le jeu est terminé
-        if (this.isGameOver) {
-            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-            ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-            ctx.fillStyle = "white";
-            ctx.font = "36px Arial";
-            ctx.textAlign = "center";
-            
-            let winnerText = "";
-            if (this.winner === 'player') {
-                winnerText = "Joueur 1 a gagné!";
-            } else if (this.winner === 'player2') {
-                winnerText = "Joueur 2 a gagné!";
-            } else {
-                winnerText = "L'ordinateur a gagné!";
-            }
-            
-            ctx.fillText(winnerText, this.canvas.width / 2, this.canvas.height / 2 - 40);
-            
-            ctx.font = "24px Arial";
-            ctx.fillText(`Score final: ${this.gameData.player.score} - ${this.gameData.computer.score}`, 
-                this.canvas.width / 2, this.canvas.height / 2);
-                
-            ctx.fillText("Appuyez sur 'R' pour rejouer", this.canvas.width / 2, this.canvas.height / 2 + 40);
-            ctx.fillText("Appuyez sur 'ESC' pour retourner au menu", this.canvas.width / 2, this.canvas.height / 2 + 80);
-            ctx.textAlign = "start";
+        
+        ctx.textAlign = "start";
+    }
+    
+    drawPauseScreen(ctx) {
+        // Fond semi-transparent
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Texte de pause
+        ctx.fillStyle = "white";
+        ctx.font = "48px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("PAUSE", this.canvas.width / 2, this.canvas.height / 2);
+        
+        // Instructions
+        ctx.font = "20px Arial";
+        ctx.fillText("Appuyez sur P pour continuer", this.canvas.width / 2, this.canvas.height / 2 + 40);
+        ctx.fillText("Appuyez sur ESC pour quitter", this.canvas.width / 2, this.canvas.height / 2 + 70);
+        
+        ctx.textAlign = "start";
+    }
+    
+    drawGameOverScreen(ctx) {
+        // Fond semi-transparent
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Texte de fin de partie
+        ctx.fillStyle = "white";
+        ctx.font = "48px Arial";
+        ctx.textAlign = "center";
+        
+        let winnerText = "";
+        if (this.winner === 'player') {
+            winnerText = "Vous avez gagné!";
+            ctx.fillStyle = "#6FFF6F"; // Vert
+        } else if (this.winner === 'player2') {
+            winnerText = "Joueur 2 a gagné!";
+            ctx.fillStyle = "#FF6F6F"; // Rouge
+        } else {
+            winnerText = "Vous avez perdu!";
+            ctx.fillStyle = "#FF6F6F"; // Rouge
+        }
+        
+        ctx.fillText(winnerText, this.canvas.width / 2, this.canvas.height / 2);
+        
+        // Score
+        ctx.fillStyle = "white";
+        ctx.font = "24px Arial";
+        const scoreText = `${this.gameData.player.score} - ${this.gameData.computer.score}`;
+        ctx.fillText(scoreText, this.canvas.width / 2, this.canvas.height / 2 + 40);
+        
+        // Instructions
+        ctx.font = "20px Arial";
+        ctx.fillText("Appuyez sur R pour rejouer", this.canvas.width / 2, this.canvas.height / 2 + 80);
+        ctx.fillText("Appuyez sur ESC pour retourner au menu", this.canvas.width / 2, this.canvas.height / 2 + 110);
+        
+        ctx.textAlign = "start";
+    }
+    
+    play() {
+        // La boucle de jeu principale
+        if (this.currentState !== 'playing') return;
+        
+        this.movePlayer();
+        this.movePlayer2OrComputer();
+        this.moveBall();
+        this.checkCollision();
+        
+        // Dessiner l'état actuel
+        this.draw();
+        
+        // Continuer la boucle
+        window.requestAnimationFrame(() => this.play());
+    }
+    
+    // Point d'entrée principal
+    start() {
+        // Charger les statistiques depuis le localStorage ou le backend
+        this.loadStats();
+        
+        // Initialiser l'interface
+        this.draw();
+    }
+    
+    loadStats() {
+        // Si un API client est défini, charger depuis le backend
+        if (this.apiClient) {
+            this.apiClient.getPlayerStats().then(stats => {
+                this.stats = stats;
+            }).catch(error => {
+                console.error('Error loading stats from backend:', error);
+                // Fallback: charger depuis localStorage
+                this.loadStatsFromLocalStorage();
+            });
+        } else {
+            // Sinon, charger depuis localStorage
+            this.loadStatsFromLocalStorage();
         }
     }
-
-    play() {
-        if (!this.gameActive) return;
-        
-        if (!this.isGameOver && !this.isPaused) {
-            this.movePlayer();
-            this.movePlayer2OrComputer();
-            this.moveBall();
-            this.checkCollision();
-            this.draw();
-            requestAnimationFrame(() => this.play());
-        } else {
-            this.draw(); // Afficher l'écran de pause ou de fin
-            
-            if (!this.isGameOver && this.isPaused) {
-                requestAnimationFrame(() => this.play());
+    
+    loadStatsFromLocalStorage() {
+        const savedStats = localStorage.getItem('pongStats');
+        if (savedStats) {
+            try {
+                this.stats = JSON.parse(savedStats);
+            } catch (e) {
+                console.error('Error parsing stats from localStorage:', e);
             }
+        }
+    }
+    
+    saveStatsToLocalStorage() {
+        localStorage.setItem('pongStats', JSON.stringify(this.stats));
+    }
+    
+    updateStats(playerWon) {
+        // Mise à jour des statistiques locales...
+        
+        // Sauvegarder sur le serveur
+        if (this.apiClient) {
+            const gameData = {
+                player_score: this.gameData.player.score,
+                computer_score: this.gameData.computer.score,
+                difficulty: this.difficulty
+            };
+            
+            console.log('Updating stats, sending to server:', gameData);
+            
+            this.apiClient.saveGameStats(gameData)
+                .then(result => console.log('Stats saved successfully:', result))
+                .catch(error => console.error('Failed to save stats:', error));
+        } else {
+            this.saveStatsToLocalStorage();
         }
     }
 }
 
-// Initialisation du jeu
+// Classe pour l'intégration avec l'API Django
+export class PongApiClient {
+    constructor(baseUrl = '') {
+        this.baseUrl = baseUrl || '';
+        this.endpoints = {
+            stats: '/api/pong/stats/',
+            saveGame: '/api/pong/save-game/'
+        };
+    }
+    
+    // Obtenir les headers pour les requêtes AJAX
+    getHeaders() {
+        // Pour Django CSRF protection
+        const csrfToken = this.getCookie('csrftoken');
+        return {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        };
+    }
+    
+    // Obtenir les statistiques du joueur
+    async getPlayerStats() {
+        try {
+            const response = await fetch(this.baseUrl + this.endpoints.stats, {
+                method: 'GET',
+                headers: this.getHeaders()
+            });
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching player stats:', error);
+            // Retourner des stats par défaut en cas d'erreur
+            return {
+                totalGames: 0,
+                playerWins: 0,
+                computerWins: 0,
+                perfectPlayerGames: 0,
+                recentGames: []
+            };
+        }
+    }
+    
+    // Sauvegarder les statistiques d'une partie
+    async saveGameStats(gameData) {
+        try {
+            console.log('Sending game stats to server:', gameData);
+            
+            // Récupérer le token CSRF
+            const csrftoken = this.getCookie('csrftoken');
+            if (!csrftoken) {
+                console.warn('CSRF token not found');
+            }
+            
+            const response = await fetch('/api/pong/save-stats/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken || ''
+                },
+                body: JSON.stringify({
+                    player_score: gameData.player_score,
+                    computer_score: gameData.computer_score,
+                    difficulty: gameData.difficulty
+                }),
+                credentials: 'include'  // Important pour inclure les cookies
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server responded with error:', response.status, errorText);
+                throw new Error(`Failed to save game stats: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('Game stats saved successfully:', data);
+            return data;
+        } catch (error) {
+            console.error('Error saving game stats:', error);
+            throw error;
+        }
+    }
+    
+    // Helper pour obtenir les cookies (pour CSRF token)
+    getCookie(name) {
+        if (!document.cookie) {
+            return null;
+        }
+        
+        const cookies = document.cookie.split(';')
+            .map(cookie => cookie.trim())
+            .filter(cookie => cookie.startsWith(name + '='));
+            
+        if (cookies.length === 0) {
+            return null;
+        }
+        
+        return decodeURIComponent(cookies[0].split('=')[1]);
+    }
+}
+
+// Initialisation de l'application
 document.addEventListener('DOMContentLoaded', () => {
-    const pongGame = new PongGame('gameCanvas');
+    // Créer l'instance du jeu
+    const pongGame = new PongGame('pongCanvas');
+    
+    // Tenter d'initialiser l'API client
+    try {
+        const apiClient = new PongApiClient();
+        pongGame.setApiClient(apiClient);
+    } catch (e) {
+        console.warn('API client initialization failed, using localStorage fallback:', e);
+    }
+    
+    // Démarrer le jeu
+    pongGame.start();
+    
+    // Gérer le redimensionnement de la fenêtre
+    window.addEventListener('resize', () => {
+        // Réajuster le canvas si nécessaire
+        const canvas = document.getElementById('pongCanvas');
+        if (canvas) {
+            // Garder les proportions mais s'adapter au conteneur
+            const container = canvas.parentElement;
+            if (container) {
+                const containerWidth = container.clientWidth;
+                const ratio = canvas.height / canvas.width;
+                
+                canvas.style.width = Math.min(containerWidth, 800) + 'px';
+                canvas.style.height = (Math.min(containerWidth, 800) * ratio) + 'px';
+            }
+        }
+    });
 });
