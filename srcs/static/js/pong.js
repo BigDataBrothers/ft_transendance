@@ -1,7 +1,19 @@
+import { pongover } from "./spa.js";
 // ----------------------------------------------------
 // Déclaration des éléments DOM utilisés dans le script
 // ----------------------------------------------------
 
+let gameData = {
+    totalGames: 0, // Nombre total de parties jouées
+    totalScore: { player: 0, computer: 0 }, // Score total cumulé
+    winLossRatio: { wins: 0, losses: 0 }, // Taux de victoires/défaites
+    perfectGames: { player: 0, computer: 0 }, // Nombre de parties parfaites
+    lastGames: [], // Historique des dernières parties
+    gameStartTime: null, // Heure de début de la partie
+    gameDuration: null, // Durée de la partie
+};
+
+export function init(){
 const firstInstruct = document.getElementById("firstInstruct");
 const secondInstruct = document.getElementById("secondInstruct");
 const menuLink = document.getElementById("menuLink");
@@ -35,19 +47,58 @@ const startButton = document.getElementById("staButton");
 const quitStButton = document.getElementById("qsButton");
 
 const title = document.getElementById("title");
-const pong = document.getElementById("gameCanvas");
-const MAX_BALL_SPEED = 8; // Vitesse maximale autorisée
+const pong = document.getElementById("game");
+const MAX_BALL_SPEED = 2; // Vitesse maximale autorisée
+
+let DIFFICULTY = 1;
+let isGameOver = false;
 
 
+const PLAYER_HEIGHT = 80;
+const PLAYER_WIDTH = 4;
+const BALL_RADIUS = 5;
+const BALL_INITIAL_SPEED = 2;
+const COMPUTER_SPEED_FACTOR = 0.85;
+const PLAYER_SPEED = 5; // Vitesse de déplacement du joueur
+const COLORS = {
+    background: '#262324',
+    paddle: '#fcfcec',
+    ball: '#fcfcec',
+    line: '#fcfcec'
+};
+const winnerScore = 3;
 let currentFocus = 0;
 let bubbleFocus = 0;
 let modeFocus = 0;
 let difficultyFocus = 0;
+let canvas = document.getElementById('canvas');
+if (!canvas) {
+    console.error("Canvas not found!");
+    return;
+}
+let context = canvas.getContext('2d');
+let anim;
+let isGamming = false;
+let isUpPressed = false;
+let isDownPressed = false;
 
 let difficultySelect = "md";
 let gameMode = 'single'; // 'single' ou 'multi'
 let isWPressed = false;
 let isSPressed = false;
+let game = {
+    player: { y: canvas.height / 2 - PLAYER_HEIGHT / 2, score: 0 },
+    computer: { y: canvas.height / 2 - PLAYER_HEIGHT / 2, score: 0 },
+    ball: {
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        prevX: canvas.width / 2, // precedent emplacement
+        prevY: canvas.height / 2, // precedent emplacement
+        r: BALL_RADIUS,
+        speed: { x: BALL_INITIAL_SPEED, y: BALL_INITIAL_SPEED },
+        lastHit: null
+    }
+};
 
 let textInterval;
 
@@ -58,21 +109,6 @@ let focusIndexes = {
     difficulty: { value: 0 }
 };
 
-let gameData = {
-    totalGames: 0, // Nombre total de parties jouées
-    totalScore: { player: 0, computer: 0 }, // Score total cumulé
-    winLossRatio: { wins: 0, losses: 0 }, // Taux de victoires/défaites
-    perfectGames: { player: 0, computer: 0 }, // Nombre de parties parfaites
-    lastGames: [], // Historique des dernières parties
-    gameStartTime: null, // Heure de début de la partie
-    gameDuration: null, // Durée de la partie
-};
-
-// pour charger les sons
-const hitSound = new Audio('hit.wav');
-const scoreSound = new Audio('score.wav');
-const winSound = new Audio('win.wav');
-
 // Texte d'info pour l'info-bulle
 const infoText = "PONG is one of the most iconic video games ever created and is often considered the first commercially successful arcade game. It was developed by Ralph H Baer and Nolan Bushnell at Atari in 1972. The gameplay is a simple simulation of table tennis, where two paddles are used to hit a ball back and forth.";
 
@@ -80,26 +116,6 @@ const infoText = "PONG is one of the most iconic video games ever created and is
 // ----------------------------------------------------
 // Fonctions pour la gestion du menu
 // ----------------------------------------------------
-
-document.addEventListener("DOMContentLoaded", function () {
-    console.log("DOM chargé, vérification des éléments...");
-
-    const requiredElements = ["menuDifficulty", /**"title",**/ "pong", "gameCanvas", "menu"];
-    
-    requiredElements.forEach(id => {
-        if (!document.getElementById(id)) {
-            console.error(`❌ Élément manquant : ${id}`);
-        } else {
-            console.log(`✅ Élément trouvé : ${id}`);
-        }
-    });
-
-    initializeBackgroundGame();  // Assure-toi que ton jeu s'initialise après le chargement du DOM.
-    if (infoBubble) {
-        infoBubble.style.display = 'none';
-    }
-});
-
 
 /**
  * Ouvre ou ferme le menu principal
@@ -149,7 +165,6 @@ function toggleInfoBubble() {
         infoBubble.style.display = 'block';
         bubbleFocus = 0;
         disableMenu();
-        // Ajouter une vérification pour s'assurer que le texte est typé seulement lors du clic sur le bouton
         typeText("info1", infoText, 50);
     } else {
         infoBubble.style.display = 'none';
@@ -202,19 +217,21 @@ function typeText(elementId, text, speed) {
 }
 
 function playGame() {
-    if (!menuDifficulty) {
-        console.error("menuDifficulty introuvable !");
-        return;
+    if(gameMode === 'multi') {
+        difficultySelect = "md";
+        // Masquer TOUS les menus
+        menuMode.style.display = 'none';
+        menuDifficulty.style.display = 'none';
+    } else {
+        menuDifficulty.style.display = 'none';
     }
     menuDifficulty.style.display = 'none';
     title.style.display = 'none';
     pong.style.display = 'block';
-    if(secondInstruct && secondInstruct.style.display === 'block') {
+    if(secondInstruct.style.display === 'block')
         secondInstruct.style.display = 'none';
-    }
     initializeGame();
 }
-
 
 // ----------------------------------------------------
 // Gestion des événements
@@ -223,15 +240,16 @@ function playGame() {
 /**
  * Ouvre/ferme le menu lorsque l'on clique sur "INSERT COIN"
  */
-menuLink.addEventListener("click", function(event) {
+function handleMenuLinkClick(event) {
     event.preventDefault();
     toggleMenu();
-});
+}
+menuLink.addEventListener("click", handleMenuLinkClick);
 
 /**
  * Fermeture de l'info-bulle en cliquant sur "Close"
  */
-closeBubble.addEventListener("click", function() {
+function handleCloseBubble() {
     enableMenu();
     infoBubble.style.display = 'none';
     infoButton.focus();
@@ -241,65 +259,82 @@ closeBubble.addEventListener("click", function() {
     if (textInterval) {
         clearInterval(textInterval);
     }
-});
+};
+closeBubble.addEventListener("click", handleCloseBubble);
 
-quitButton.addEventListener("click", function() {
+function handleQuitButton() {
     selectMenu(menuLink, menu, null, null);
-})
+}
+quitButton.addEventListener("click", handleQuitButton);
 
 /**
  * Ouverture de l'info-bulle en cliquant sur "INFO"
  */
-infoButton.addEventListener("click", function() {
+function handleInfoButton() {
     toggleInfoBubble();
-});
+};
+infoButton.addEventListener("click", handleInfoButton);
 
 /**
  * Action pour "More Info"
  */
-moreBubble.addEventListener("click", function () {
+function handleMoreBubble() {
     window.open("https://en.wikipedia.org/wiki/Pong", "_blank");
-});
+};
+moreBubble.addEventListener("click", handleMoreBubble);
 
-moreBubble.addEventListener("focus", function () {
+function handleMoreBubbleFocus() {
     moreBubble.setAttribute('title', 'Opens Pong Wikipedia page in a new window.');
-});
+};
+moreBubble.addEventListener("focus", handleMoreBubbleFocus);
 
-playButton.addEventListener("click", function() {
+function handlePlayButton() {
     selectMenu(menuMode, menu, modeFocus, modeItems)
-})
+}
+playButton.addEventListener("click", handlePlayButton);
 
-singleButton.addEventListener("click", function() {
+function handleSingleButton() {
+    gameMode = 'single';
+    updateStatsLabels();
     selectMenu(menuDifficulty, menuMode, difficultyFocus, difficultyItems)
-})
+}
+singleButton.addEventListener("click", handleSingleButton);
 
-quitMButton.addEventListener("click", function() {
+function handleQuitMButton() {
     selectMenu(menu, menuMode, currentFocus, menuItems)
-})
+}
+quitMButton.addEventListener("click", handleQuitMButton);
 
-multiButton.addEventListener("click", function() {
+function handleMultiButton() {
     gameMode = 'multi';
-    selectMenu(menuDifficulty, menuMode, difficultyFocus, difficultyItems);
-});
+    difficultySelect = "md"; // difficulté par défaut
+    updateStatsLabels();
+    playGame();
+};
+multiButton.addEventListener("click", handleMultiButton);
 
-easyButton.addEventListener("click", function() {
+function handleEasyButton() {
     difficultySelect = "es";
     playGame();
-})
+}
+easyButton.addEventListener("click", handleEasyButton);
 
-mediumButton.addEventListener("click", function() {
+function handleMediumButton() {
     difficultySelect = "md";
     playGame();
-})
+}
+mediumButton.addEventListener("click", handleMediumButton);
 
-hardMButton.addEventListener("click", function() {
+function handleHardMButton() {
     difficultySelect = "hd";
     playGame();
-})
+}
+hardMButton.addEventListener("click", handleHardMButton);
 
-quitDMButton.addEventListener("click", function() {
+function handleQuitDMButton() {
     selectMenu(menuMode, menuDifficulty, modeFocus, modeItems)
-})
+}
+quitDMButton.addEventListener("click", handleQuitDMButton);
 
 /**
  * Gestion des touches directionnelles pour naviguer dans le menu et l'info-bulle
@@ -317,7 +352,7 @@ function handleArrowNavigation(event, focusIndex, items) {
 }
 
 // Gestionnaire d'événements
-document.addEventListener("keydown", function(event) {
+function handleDocumentKeydown(event) {
     if (menu.style.display === "block" && infoBubble.style.display !== "block") { 
         // Navigation dans le menu
         handleArrowNavigation(event, focusIndexes.menu, menuItems);
@@ -340,8 +375,10 @@ document.addEventListener("keydown", function(event) {
 
         if (event.key === " " && modeItems[focusIndexes.mode.value].id === "siButton") {
             selectMenu(menuDifficulty, menuMode, difficultyFocus, difficultyItems);
-        } else if (event.key === " " && modeItems[focusIndexes.mode.value].id === "qmButton") {
-            selectMenu(menu, menuMode, currentFocus, menuItems);
+        } else if (event.key === " " && modeItems[focusIndexes.mode.value].id === "muButton") {
+            gameMode = 'multi';
+            difficultySelect = "md"; // Difficulté par défaut
+            playGame();
         }
 
     } else if (menuDifficulty.style.display === "block") {
@@ -366,17 +403,14 @@ document.addEventListener("keydown", function(event) {
             // Placeholder for pong-specific logic
         }
     } else {
-        if (title) {
-            title.style.display = 'block';
-        } else {
-            console.error("title introuvable !");
-        }
-        
+        title.style.display = 'block';
         pong.style.display = 'none';
         stop();
         toggleMenu();
     }
-});
+};
+document.addEventListener("keydown", handleDocumentKeydown);
+
 
 /**
  * PONG
@@ -385,38 +419,11 @@ document.addEventListener("keydown", function(event) {
 'use strict';
 
 // Configuration des constantes
-let DIFFICULTY = 1;
-let isGameOver = false;
 
-
-const PLAYER_HEIGHT = 80;
-const PLAYER_WIDTH = 4;
-const BALL_RADIUS = 5;
-const BALL_INITIAL_SPEED = 2;
-const COMPUTER_SPEED_FACTOR = 0.85;
-const PLAYER_SPEED = 5; // Vitesse de déplacement du joueur
-const COLORS = {
-    background: '#262324',
-    paddle: '#fcfcec',
-    ball: '#fcfcec',
-    line: '#fcfcec'
-};
-const winnerScore = 3;
-
-let canvas, context, game, anim;
-let isGamming = false;
-let isUpPressed = false;
-let isDownPressed = false;
 
 // Initialisation du jeu
 function initializeGame() {
-    canvas = document.getElementById('gameCanvas');
-    if (!canvas) {
-        console.error("Canvas not found!");
-        return;
-    }
     gameData.gameStartTime = Date.now();
-    context = canvas.getContext('2d');
 
     game = {
         player: { y: canvas.height / 2 - PLAYER_HEIGHT / 2, score: 0 },
@@ -626,13 +633,6 @@ function ballMove() {
     }
 }
 
-function resetBall() {
-    game.ball.x = canvas.width / 2;
-    game.ball.y = canvas.height / 2;
-    game.ball.speed.x = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
-    game.ball.speed.y = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
-}
-
 function collide(player) {
     const ball = game.ball;
     const isPlayerPaddle = player === game.player;
@@ -655,23 +655,22 @@ function collide(player) {
 
         if (yAtCollision >= player.y && yAtCollision <= player.y + PLAYER_HEIGHT) {
             // Collision réussie
-            hitSound.play();
             ball.speed.x *= -1.2;
             
-            if (Math.abs(ball.speed.x) > MAX_BALL_SPEED) {
-                ball.speed.x = Math.sign(ball.speed.x) * MAX_BALL_SPEED;
-            }
+            // Appliquer la limite de vitesse
+        ball.speed.x = Math.sign(ball.speed.x) * Math.min(Math.abs(ball.speed.x), MAX_BALL_SPEED);
+        ball.speed.y = Math.sign(ball.speed.y) * Math.min(Math.abs(ball.speed.y), MAX_BALL_SPEED);   
+            
             // Ajuster la direction en fonction du point d'impact
             const hitPosition = (yAtCollision - player.y) / PLAYER_HEIGHT;
             const angle = hitPosition * Math.PI / 2;
-            ball.speed.y = Math.sin(angle) * 5; // Ajustez 5 pour modifier la courbe
+            ball.speed.y = Math.sin(angle) * 5;
             
             // Corriger la position pour éviter le chevauchement
             ball.x = paddleEdgeX;
             ball.y = yAtCollision;
         } else {
             // Manqué le paddle
-            scoreSound.play();
             if (isPlayerPaddle) {
                 game.computer.score++;
                 gameData.totalScore.computer++;
@@ -679,6 +678,7 @@ function collide(player) {
                 game.player.score++;
                 gameData.totalScore.player++;
             }
+            displayGameData();
             resetBall();
             if (game.computer.score === winnerScore || game.player.score === winnerScore) {
                 let winner;
@@ -689,30 +689,47 @@ function collide(player) {
                 }
                 cancelAnimationFrame(anim);
                 drawWinningMessage(winner);
-                winSound.play();
-                isGameOver = true;
-                recordGameData(winner);
-                saveGameStats({
-                    playerScore: game.player.score, 
-                    computerScore: game.computer.score, 
-                    difficulty: difficultySelect
-                });
-                
+                endGame(winner);
             }
         }
     }
 }
 
+function endGame(winner) {
+    if (isGameOver) return;
+    isGameOver = true;
+    if (pongover === true) return;
+    
+    cancelAnimationFrame(anim);
+    window.removeEventListener('keydown', keyDownHandler);
+    window.removeEventListener('keyup', keyUpHandler);
+
+    if (pongover === true) return;
+    recordGameData(winner);
+    if (pongover === true) return;
+    displayGameData();
+
+
+    // Gestion des boutons
+    window.addEventListener('keydown', handleWindowKeydown);
+}
+
 function displayGameData() {
+    if (pongover === true) return;
     document.getElementById("totalGames").textContent = gameData.totalGames;
     document.getElementById("totalPlayerScore").textContent = gameData.totalScore.player;
     document.getElementById("totalComputerScore").textContent = gameData.totalScore.computer;
 
-    const winRatio = (gameData.winLossRatio.wins / gameData.totalGames * 100).toFixed(2);
+    const totalWins = gameData.winLossRatio.wins;
+    const winRatio = gameData.totalGames > 0 
+        ? ((totalWins / gameData.totalGames) * 100).toFixed(2) 
+        : 0;
     document.getElementById("winRatio").textContent = `${winRatio}%`;
 
     document.getElementById("perfectPlayer").textContent = gameData.perfectGames.player;
-    document.getElementById("perfectComputer").textContent = gameData.perfectGames.computer;
+    document.getElementById("perfectComputer").textContent = gameMode === 'multi' 
+    ? gameData.perfectGames.computer 
+    : gameData.perfectGames.computer; // Les données restent les mêmes, seul le libellé change via updateStatsLabels()
 
     const lastGamesList = document.getElementById("lastGames");
     lastGamesList.innerHTML = ""; // Effacer la liste précédente
@@ -721,15 +738,25 @@ function displayGameData() {
         const li = document.createElement("li");
         li.textContent = `${game.winner} a gagné (${game.score.player}-${game.score.computer}) - ${game.duration.toFixed(2)}s`;
         if (game.isPerfect) {
-            li.textContent += " - Parfait !";
+            li.textContent += " - Parfait ! 🏆🏆";
         }
         lastGamesList.appendChild(li);
     });
 }
 
-function cleanupEventListeners() {
-    window.removeEventListener('keydown', keyDownHandler);
-    window.removeEventListener('keyup', keyUpHandler);
+function updateStatsLabels() {
+    if (pongover === true) return;
+    if (gameMode === 'multi') {
+        document.getElementById('playerLabel').textContent = 'Joueur 1 :';
+        document.getElementById('opponentLabel').textContent = 'Joueur 2 :';
+        document.getElementById('perfectPlayerLabel').textContent = 'Joueur 1 :';
+        document.getElementById('perfectOpponentLabel').textContent = 'Joueur 2 :';
+    } else {
+        document.getElementById('playerLabel').textContent = 'Joueur :';
+        document.getElementById('opponentLabel').textContent = 'Ordinateur :';
+        document.getElementById('perfectPlayerLabel').textContent = 'Joueur :';
+        document.getElementById('perfectOpponentLabel').textContent = 'Ordinateur :';
+    }
 }
 
 function recordGameData(winner) {
@@ -737,21 +764,38 @@ function recordGameData(winner) {
     const endTime = Date.now();
     gameData.gameDuration = (endTime - gameData.gameStartTime) / 1000; // Durée en secondes
 
+    saveGameStats({
+        playerScore: game.player.score, 
+        computerScore: game.computer.score, 
+        difficulty: difficultySelect
+    });
     // Mettre à jour le nombre total de parties
     gameData.totalGames++;
 
     // Mettre à jour le taux de victoires/défaites
-    if (winner === "Le joueur") {
-        gameData.winLossRatio.wins++;
-    } else {
-        gameData.winLossRatio.losses++;
-    }
+    if (gameMode === 'single')
+        {
+            if (winner === "Le joueur") {
+                gameData.winLossRatio.wins++;
+            } else {
+                gameData.winLossRatio.losses++;
+            }
+        }
 
     // Vérifier si c'est une partie parfaite
-    if (winner === "Le joueur" && game.computer.score === 0) {
-        gameData.perfectGames.player++;
-    } else if (winner === "L'ordinateur" && game.player.score === 0) {
-        gameData.perfectGames.computer++;
+    if (gameMode === 'single') {
+        if (winner === "Le joueur" && game.computer.score === 0) {
+            gameData.perfectGames.player++;
+        } else if (winner === "L'ordinateur" && game.player.score === 0) {
+            gameData.perfectGames.computer++;
+        }
+    } 
+    else if (gameMode === 'multi') {
+        if (winner === "Player 1" && game.computer.score === 0) {
+            gameData.perfectGames.player++;
+        } else if (winner === "Player 2" && game.player.score === 0) {
+            gameData.perfectGames.computer++;
+        }
     }
 
     // Ajouter cette partie à l'historique des dernières parties
@@ -769,202 +813,27 @@ function recordGameData(winner) {
     }
 
     // Afficher les données mises à jour
+    if (pongover === true) return;
     displayGameData();
-    
-    // Supprimer cette ligne incorrecte:
-    // saveGameStats(playerScore, computerScore, currentDifficulty);
-    // La sauvegarde est déjà faite dans la fonction collide
 }
 
-// Réinitialisation du jeu avec la touche 'b'
-// ----------------------------------------------------
-// Gestion des événements globaux
-// ----------------------------------------------------
-window.addEventListener('keydown', (event) => {
-    if (isGameOver) {
-        if (event.key === 'b') {
-            // Redémarrer le jeu
-            initializeGame();
-        } else if (event.key === 'q') {
-            // Retourner au menu principal
-            cleanupEventListeners();
-            gameMode = 'single'; // Réinitialiser le mode
-            selectMenu(menu, pong, currentFocus, menuItems);
-            title.style.display = 'block'; // Affiche le titre
-            isGameOver = false; // Réinitialiser l'état du jeu
-        }
-    }
-});
-
-function initializeBackgroundGame() {
-    const bgCanvas = document.getElementById('backgroundCanvas');
-    if (!bgCanvas) {
-        console.error("backgroundCanvas introuvable !");
-        return;
-    }
-    
-    const bgContext = bgCanvas.getContext('2d');
-    if (!bgContext) {
-        console.error("Impossible d'obtenir le contexte 2D du canvas.");
-        return;
-    }
-
-    // Définir les dimensions du canvas si nécessaire
-    bgCanvas.width = bgCanvas.clientWidth;
-    bgCanvas.height = bgCanvas.clientHeight;
-
-    const bgGame = {
-        player: { y: bgCanvas.height / 2 - PLAYER_HEIGHT / 2 },
-        computer: { y: bgCanvas.height / 2 - PLAYER_HEIGHT / 2 },
-        ball: {
-            x: bgCanvas.width / 2,
-            y: bgCanvas.height / 2,
-            r: BALL_RADIUS,
-            speed: { x: BALL_INITIAL_SPEED, y: BALL_INITIAL_SPEED }
-        }
-    };
-
-    // Fonction pour dessiner un paddle dans le background
-    function drawPaddle(ctx, x, y) {
-        ctx.fillStyle = COLORS.paddle;
-        ctx.fillRect(x, y, PLAYER_WIDTH, PLAYER_HEIGHT);
-    }
-    
-    // Fonction pour dessiner la balle dans le background
-    function drawBall(ctx, ball) {
-        ctx.beginPath();
-        ctx.fillStyle = COLORS.ball;
-        ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-        ctx.fill();
-    }
-    
-    // Fonction pour dessiner la ligne du milieu dans le background
-    function drawMiddleLine(ctx) {
-        ctx.strokeStyle = COLORS.line;
-        ctx.beginPath();
-        ctx.moveTo(bgCanvas.width / 2, 0);
-        ctx.lineTo(bgCanvas.width / 2, bgCanvas.height);
-        ctx.setLineDash([10, 5]);
-        ctx.lineWidth = 5;
-        ctx.stroke();
-    }
-
-    // Fonction pour dessiner tous les éléments du background
-    function drawBackground() {
-        bgContext.fillStyle = COLORS.background;
-        bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-        
-        // Dessiner la ligne du milieu
-        drawMiddleLine(bgContext);
-        
-        // Dessiner les paddles
-        drawPaddle(bgContext, 10, bgGame.player.y);
-        drawPaddle(bgContext, bgCanvas.width - PLAYER_WIDTH - 10, bgGame.computer.y);
-        
-        // Dessiner la balle
-        drawBall(bgContext, bgGame.ball);
-    }
-    
-    // Fonction pour déplacer la balle dans le background
-    function ballMove(game) {
-        const ball = game.ball;
-        
-        // Déplacer la balle
-        ball.x += ball.speed.x;
-        ball.y += ball.speed.y;
-        
-        // Collision avec les murs horizontaux (haut/bas)
-        if (ball.y <= 0 || ball.y >= bgCanvas.height) {
-            ball.speed.y *= -1;
-        }
-        
-        // Collision avec le paddle droit (ordinateur)
-        if (ball.x >= bgCanvas.width - PLAYER_WIDTH - 10) {
-            if (ball.y >= game.computer.y && ball.y <= game.computer.y + PLAYER_HEIGHT) {
-                // La balle frappe le paddle
-                ball.speed.x *= -1;
-                
-                // Ajuster la direction Y selon le point d'impact
-                const hitPosition = (ball.y - game.computer.y) / PLAYER_HEIGHT;
-                const angle = hitPosition * Math.PI / 2;
-                ball.speed.y = Math.sin(angle) * 3; // Ajustement plus doux pour le background
-            } else if (ball.x > bgCanvas.width) {
-                // La balle sort de l'écran à droite
-                resetBackgroundBall(game);
-            }
-        } 
-        // Collision avec le paddle gauche (joueur)
-        else if (ball.x <= PLAYER_WIDTH + 10) {
-            if (ball.y >= game.player.y && ball.y <= game.player.y + PLAYER_HEIGHT) {
-                // La balle frappe le paddle
-                ball.speed.x *= -1;
-                
-                // Ajuster la direction Y selon le point d'impact
-                const hitPosition = (ball.y - game.player.y) / PLAYER_HEIGHT;
-                const angle = hitPosition * Math.PI / 2;
-                ball.speed.y = Math.sin(angle) * 3; // Ajustement plus doux pour le background
-            } else if (ball.x < 0) {
-                // La balle sort de l'écran à gauche
-                resetBackgroundBall(game);
-            }
-        }
-    }
-    
-    // Fonction pour réinitialiser la balle dans le background
-    function resetBackgroundBall(game) {
-        game.ball.x = bgCanvas.width / 2;
-        game.ball.y = bgCanvas.height / 2;
-        game.ball.speed.x = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
-        game.ball.speed.y = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
-    }
-    
-    // Fonction pour déplacer les paddles IA dans le background
-    function moveBot(player, ball, canvasHeight) {
-        // Calculer la position cible (moins précise pour un effet de background)
-        const targetY = ball.y - PLAYER_HEIGHT / 2 + (Math.random() * 20 - 10);
-        const diff = targetY - player.y;
-        const speed = 3; // Vitesse adaptée pour l'animation de background
-        
-        // Déplacer le paddle vers la cible
-        player.y += Math.sign(diff) * Math.min(Math.abs(diff), speed);
-        
-        // S'assurer que le paddle reste dans les limites du canvas
-        player.y = Math.max(0, Math.min(player.y, canvasHeight - PLAYER_HEIGHT));
-    }
-    
-    // Fonction principale de mise à jour de l'animation de background
-    function updateBackgroundGame() {
-        // Déplacer les paddles IA
-        moveBot(bgGame.player, bgGame.ball, bgCanvas.height);
-        moveBot(bgGame.computer, bgGame.ball, bgCanvas.height);
-        
-        // Déplacer la balle et gérer les collisions
-        ballMove(bgGame);
-        
-        // Dessiner tous les éléments
-        drawBackground();
-        
-        // Continuer l'animation
-        requestAnimationFrame(updateBackgroundGame);
-    }
-    
-    // Démarrer l'animation de background
-    updateBackgroundGame();
+function changeDirection(paddleY, yAtCollision) {
+    const hitPosition = yAtCollision - paddleY;
+    const normalizedHit = hitPosition / PLAYER_HEIGHT;
+    const angle = normalizedHit * Math.PI / 2; // Angle entre -π/2 et π/2
+    game.ball.speed.y = Math.sin(angle) * 5; // Ajustez la vitesse si nécessaire
+    game.ball.speed.y = Math.sign(game.ball.speed.y) * Math.min(Math.abs(game.ball.speed.y), MAX_BALL_SPEED);
 }
 
-
-function moveBot(player, ball, canvasHeight) {
-    const targetY = ball.y - PLAYER_HEIGHT / 2;
-    const diff = targetY - player.y;
-    const speed = 3; // Ajustez la vitesse pour les bots
-
-    player.y += Math.sign(diff) * Math.min(Math.abs(diff), speed);
-    player.y = Math.max(0, Math.min(player.y, canvasHeight - PLAYER_HEIGHT));
+function resetBall() {
+    const { ball, player, computer } = game;
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+    ball.speed.x = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
+    ball.speed.y = BALL_INITIAL_SPEED * (Math.random() > 0.5 ? 1 : -1);
+    player.y = canvas.height / 2 - PLAYER_HEIGHT / 2;
+    computer.y = canvas.height / 2 - PLAYER_HEIGHT / 2;
 }
-
-document.addEventListener("DOMContentLoaded", function () {
-    initializeBackgroundGame();
-});
 
 async function saveGameStats(gameData) {
     try {
@@ -1013,18 +882,82 @@ async function saveGameStats(gameData) {
     }
 }
 
-// Fonction pour récupérer un cookie (pour le CSRF token)
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
+// Réinitialisation du jeu avec la touche 'b'
+// ----------------------------------------------------
+// Gestion des événements globaux
+// ----------------------------------------------------
+function handleWindowKeydown(event) {
+    if (isGameOver) {
+        if (event.key === 'b') {
+            // Redémarrer le jeu
+            initializeGame();
+        } else if (event.key === 'q') {
+            // Retourner au menu principal
+            gameMode = 'single'; // Réinitialiser le mode
+            updateStatsLabels();
+            selectMenu(menu, pong, currentFocus, menuItems);
+            title.style.display = 'block'; // Affiche le titre
+            isGameOver = false; // Réinitialiser l'état du jeu
         }
     }
-    return cookieValue;
+};
+window.addEventListener('keydown', handleWindowKeydown);
+
+
+// function initializeBackgroundGame() {
+//     if (pongover === true) return;
+//     const bgCanvas = document.getElementById('backgroundCanvas');
+//     const bgContext = bgCanvas.getContext('2d');
+//     bgCanvas.width = 640;
+//     bgCanvas.height = 420;
+
+//     const bgGame = {
+//         player: { y: bgCanvas.height / 2 - PLAYER_HEIGHT / 2 },
+//         computer: { y: bgCanvas.height / 2 - PLAYER_HEIGHT / 2 },
+//         ball: {
+//             x: bgCanvas.width / 2,
+//             y: bgCanvas.height / 2,
+//             r: BALL_RADIUS,
+//             speed: { x: BALL_INITIAL_SPEED, y: BALL_INITIAL_SPEED }
+//         }
+//     };
+
+//     function drawBackground() {
+//         bgContext.fillStyle = COLORS.background;
+//         bgContext.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+//         // Dessinez les paddles et la balle
+//         drawPaddle(bgContext, 10, bgGame.player.y);
+//         drawPaddle(bgContext, bgCanvas.width - PLAYER_WIDTH - 10, bgGame.computer.y);
+//         drawBall(bgContext, bgGame.ball);
+//     }
+
+//     function updateBackgroundGame() {
+//         // Déplace les joueurs bots
+//         moveBot(bgGame.player, bgGame.ball, bgCanvas.height);
+//         moveBot(bgGame.computer, bgGame.ball, bgCanvas.height);
+
+//         // Déplace la balle
+//         ballMove();
+
+//         // Redessinez la scène
+//         drawBackground();
+
+//         requestAnimationFrame(updateBackgroundGame);
+//     }
+
+//     updateBackgroundGame();
+// }
+
+function moveBot(player, ball, canvasHeight) {
+    const targetY = ball.y - PLAYER_HEIGHT / 2;
+    const diff = targetY - player.y;
+    const speed = 3; // Ajustez la vitesse pour les bots
+
+    player.y += Math.sign(diff) * Math.min(Math.abs(diff), speed);
+    player.y = Math.max(0, Math.min(player.y, canvasHeight - PLAYER_HEIGHT));
+}
+
+updateStatsLabels();
+// initializeBackgroundGame();
 }

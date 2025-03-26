@@ -15,3 +15,15 @@ class SignupForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = get_user_model()
         fields = ['username', 'email', 'first_name', 'last_name', 'profile_photo']
+
+class UpdateUserForm(forms.ModelForm):
+    class Meta:
+        model = get_user_model()
+        fields = ['username', 'email', 'first_name', 'last_name', 'profile_photo']
+        widgets = {
+            'profile_photo': forms.FileInput(attrs={
+                'class': 'form-control',
+                'label': 'Photo de profil',
+
+            })
+        }# exclude = ('password',)

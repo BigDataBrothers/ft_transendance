@@ -4,15 +4,21 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
-
+import uuid
 
 
 def user_profile_photo_path(instance, filename):
-    return f'profiles/{instance.id}/{filename}'
+    return f'users/avatars/avatar_{uuid.uuid4()}'
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    profile_photo = models.ImageField(upload_to=user_profile_photo_path)
+    profile_photo = models.ImageField(
+        verbose_name='Avatar',
+        upload_to='users/avatars/',
+        blank=True,
+        null=True,
+        default='users/avatars/default_avatar.jpg'
+    )
     online = models.BooleanField(default=False)
     is_42_user = models.BooleanField(default=False)
     intra_profile_url = models.URLField(max_length=255, null=True, blank=True)

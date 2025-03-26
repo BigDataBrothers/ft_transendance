@@ -27,7 +27,7 @@ import os
 
 
 from .models import Profile, Achievement
-from .forms import AchievementForm, LoginForm, SignupForm
+from .forms import AchievementForm, LoginForm, SignupForm, UpdateUserForm
 from urllib.parse import urlencode
 
 User = get_user_model()
@@ -57,7 +57,7 @@ def profile_view(request):
         "is_authenticated": True,
         "username": request.user.username,
         "email": request.user.email,
-        "profile_photo": profile_photo_url, 
+        "profile_photo": profile_photo_url,
         "level": profile.level,
         "games_played": profile.games_played,
         "win_rate": profile.win_rate,
@@ -111,13 +111,13 @@ def add_friend(request, username):
         friend_user = User.objects.get(username=username)
         friend_profile = Profile.objects.get(user=friend_user)
         current_user_profile = Profile.objects.get(user=request.user)
-        
+
         if friend_profile not in current_user_profile.friends.all():
             current_user_profile.friends.add(friend_profile)
             messages.success(request, f'{username} has been added to your friends')
         else:
             messages.info(request, f'{username} is already in your friends list')
-    
+
     except User.DoesNotExist:
         messages.error(request, 'User not found')
     except Profile.DoesNotExist:
@@ -178,9 +178,9 @@ def api_home(request):
 
         # Simuler les jeux populaires (à remplacer plus tard par de vraies données si nécessaire)
         featured_games = [
-            {"title": "Game 1", "image": "/static/images/game1.jpg", "url": "/game1"},
-            {"title": "Game 2", "image": "/static/images/game2.jpg", "url": "/game2"},
-            {"title": "Game 3", "image": "/static/images/game3.jpg", "url": "/game3"}
+            {"title": "Pong", "image": "/static/images/game1.jpg", "url": "/pong"},
+            {"title": "Pong Improved", "image": "/static/images/game2.jpg", "url": "/pong-ameliore"},
+            {"title": "Bomberman", "image": "/static/images/game3.jpg", "url": "/Bomberman"}
         ]
 
         # Activité récente basée sur les notifications
@@ -277,12 +277,14 @@ def signup_view(request):
         return JsonResponse({'detail': 'Nom d\'utilisateur déjà pris.'}, status=400)
 
     user = User.objects.create_user(username=username, email=email, password=password, first_name=first_name, last_name=last_name)
-    create_user_directory(user)  # ✅ Création du dossier utilisateur
 
+    create_user_directory(user)
     if avatar:
-        filename = default_storage.save(f'users/{user.username}/{avatar.name}', avatar)
-        user.profile_photo = filename
+        user.profile_photo = avatar
         user.save()
+
+    # Connecter l'utilisateur automatiquement après l'inscription
+    login(request, user)
 
     return JsonResponse({'detail': 'Inscription réussie !', 'redirect_url': reverse_lazy('login')}, status=201)
 
@@ -345,7 +347,7 @@ def callback_view(request):
             return JsonResponse({'success': False, 'error': 'Failed to fetch user data'})
 
         user_data = user_data_response.json()
-        
+
         # Créer ou mettre à jour l'utilisateur
         user, created = User.objects.get_or_create(
             username=user_data['login'],
@@ -370,23 +372,24 @@ def callback_view(request):
         # Télécharger la photo de profil uniquement si elle n'existe pas déjà
         if 'image' in user_data and 'link' in user_data['image']:
             try:
-                if not user.profile_photo:  # Vérifie si la photo de profil n'existe pas déjà
-                    print(f"Téléchargement de l'image pour {user.username}")
-                    image_response = requests.get(user_data['image']['link'], timeout=5)
-                    if image_response.ok:
-                        file_extension = '.jpg'
-                        image_name = f'users/{user.username}/avatar_{uuid.uuid4()}{file_extension}'
+            # Supprimer l'ancienne photo si elle existe
+                if user.profile_photo:
+                    if os.path.exists(user.profile_photo.path):
+                        os.remove(user.profile_photo.path)
+                    user.profile_photo.delete()
 
-                        upload_path = os.path.join(settings.MEDIA_ROOT, f'users/{user.username}')
-                        os.makedirs(upload_path, exist_ok=True)
-
-                        user.profile_photo.save(
-                            image_name,
-                            ContentFile(image_response.content),
-                            save=True
-                        )
+                image_response = requests.get(user_data['image']['link'])
+                if image_response.ok:
+                    from django.core.files.base import ContentFile
+                    image_name = f"avatar_{user.username}.jpg"
+                    user.profile_photo.save(
+                        image_name,
+                        ContentFile(image_response.content),
+                        save=True
+                    )
             except Exception as e:
-                print(f"Erreur lors du téléchargement de l'image: {str(e)}")
+                print(f"Could not download profile photo: {str(e)}")
+                return JsonResponse({'success': False, 'error': f'Could not download profile photo: {str(e)}'})
 
         # Créer ou mettre à jour le profil
         Profile.objects.get_or_create(
@@ -485,18 +488,19 @@ def index(request):
 @login_required
 def save_game_stats(request):
     """API pour sauvegarder les statistiques d'une partie"""
+    # Augmenter le niveau du joueur de 1 tout les 10 points
     if request.method == 'POST':
         try:
             print("Received save_game_stats request")
             data = json.loads(request.body)
             print(f"Received data: {data}")
-            
+
             # Récupérer ou créer les stats du joueur
             player_stats, created = PlayerStats.objects.get_or_create(player=request.user)
-            
+
             # Mettre à jour les stats globales
             player_stats.total_games += 1
-            
+
             # Déterminer le gagnant et mettre à jour les stats
             is_perfect_game = False
             if data['player_score'] > data['computer_score']:
@@ -506,13 +510,13 @@ def save_game_stats(request):
                     player_stats.perfect_games += 1
             else:
                 player_stats.games_lost += 1
-            
+
             # Calculer le taux de victoire
             if player_stats.total_games > 0:
                 player_stats.win_ratio = (player_stats.games_won / player_stats.total_games) * 100
-            
+
             player_stats.save()
-            
+
             # Enregistrer cette partie spécifique
             game = GameStatistics.objects.create(
                 player=request.user,
@@ -521,30 +525,31 @@ def save_game_stats(request):
                 difficulty=data.get('difficulty', 'medium'),
                 is_perfect_game=is_perfect_game
             )
-            
+
             # Mettre à jour également le profil principal de l'utilisateur
             profile = request.user.profile
             profile.games_played += 1
             profile.last_played_game = 'Pong'
-            
+
             # Calculer le nouveau taux de victoire global pour le profil
             if player_stats.total_games > 0:
-                profile.win_rate = (player_stats.games_won / player_stats.total_games) * 100
-            
+                ratio = (player_stats.games_won / player_stats.total_games) * 100
+                profile.win_rate = ratio
+
             # Ajouter les points au score total
             profile.total_score += data['player_score']
-            
+
             # Mise à jour du temps de jeu (approximatif, par exemple 5 minutes par partie)
             profile.time_played += 5.0  # minutes
-            
+
             profile.save()
-            
+
             return JsonResponse({'success': True, 'message': 'Game stats saved successfully'})
-        
+#
         except Exception as e:
             print(f"Error saving game stats: {e}")
             return JsonResponse({'success': False, 'error': str(e)}, status=400)
-    
+#
     return JsonResponse({'success': False, 'error': 'Only POST method is allowed'}, status=405)
 
 # Ajout d'une API pour récupérer les stats de Pong pour la page de profil
@@ -552,16 +557,16 @@ def save_game_stats(request):
 def get_combined_profile_stats(request):
     """API pour récupérer les statistiques combinées du profil et du jeu Pong"""
     profile = request.user.profile
-    
+
     try:
         pong_stats = PlayerStats.objects.get(player=request.user)
     except PlayerStats.DoesNotExist:
         pong_stats = None
-    
+
     # Récupérer les 5 dernières parties de Pong
     recent_games = GameStatistics.objects.filter(player=request.user).order_by('-date_played')[:5]
     recent_games_data = []
-    
+
     for game in recent_games:
         recent_games_data.append({
             'date': game.date_played.strftime('%d/%m/%Y'),
@@ -571,7 +576,7 @@ def get_combined_profile_stats(request):
             'result': 'Victoire' if game.player_score > game.computer_score else 'Défaite',
             'perfect': game.is_perfect_game
         })
-    
+
     # Construire les données combinées
     profile_data = {
         "username": request.user.username,
@@ -599,7 +604,7 @@ def get_combined_profile_stats(request):
             "recent_games": recent_games_data
         }
     }
-    
+
     return JsonResponse(profile_data)
 
 @login_required
@@ -607,11 +612,11 @@ def get_player_stats(request):
     """API pour récupérer les statistiques du joueur"""
     try:
         player_stats = PlayerStats.objects.get(player=request.user)
-        
+
         # Récupérer les 5 dernières parties
         recent_games = GameStatistics.objects.filter(player=request.user)[:5]
         recent_games_data = []
-        
+
         for game in recent_games:
             recent_games_data.append({
                 'date': game.date_played.strftime('%d/%m/%Y'),
@@ -619,7 +624,7 @@ def get_player_stats(request):
                 'computer_score': game.computer_score,
                 'difficulty': game.difficulty
             })
-        
+
         return JsonResponse({
             'total_games': player_stats.total_games,
             'games_won': player_stats.games_won,
@@ -637,3 +642,95 @@ def get_player_stats(request):
             'win_ratio': 0,
             'recent_games': []
         })
+
+@login_required
+@require_POST
+def update_user(request):
+    if request.user.is_42_user:
+        return JsonResponse({
+            'success': False,
+            'detail': 'Les utilisateurs 42 ne sont pas autorisés à modifier leur profil.',
+        }, status=403)
+
+    try:
+        old_avatar_path = None
+        if request.user.profile_photo:
+            old_avatar_path = request.user.profile_photo.path
+
+        form = UpdateUserForm(request.POST, request.FILES, instance=request.user)
+
+        if (form.data.get('username') != request.user.username and 
+                User.objects.filter(username=form.data.get('username')).exists()):
+                form.add_error('username', 'Ce nom d\'utilisateur est déjà pris.')
+                return JsonResponse({
+                    'success': False,
+                    'detail': 'Ce nom d\'utilisateur est déjà pris.',
+                    'errors': form.errors
+                }, status=400)
+        
+        if (form.data.get('email') != request.user.email and 
+                User.objects.filter(email=form.data.get('email')).exists()):
+                form.add_error('email', 'Cet email d\'utilisateur est déjà pris.')
+                return JsonResponse({
+                    'success': False,
+                    'detail': 'Cet email d\'utilisateur est déjà pris.',
+                    'errors': form.errors
+                }, status=400)
+        
+        if form.is_valid():
+            form.save()
+
+            # Si une nouvelle photo est envoyée ET qu'il y avait une ancienne photo
+            if 'profile_photo' in request.FILES and old_avatar_path:
+                if os.path.exists(old_avatar_path):
+                    os.remove(old_avatar_path)
+
+            return JsonResponse({
+                'success': True,
+                'detail': 'Vos informations ont été mises à jour avec succès.',
+            }, status=200)
+        else:
+            return JsonResponse({
+                'success': False,
+                'detail': 'Formulaire invalide',
+                'errors': form.errors
+            }, status=400)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'detail': f'Erreur lors de la mise à jour: {str(e)}'
+        }, status=400)
+
+@login_required
+def get_user_data(request):
+    user = request.user
+    data = {
+        'username': user.username,
+        'email': user.email,
+        'first_name': user.first_name,
+        'last_name': user.last_name,
+        'profile_photo': user.profile_photo.url if user.profile_photo else None,
+    }
+    return JsonResponse(data)
+
+@login_required
+@require_POST
+def delete_user(request):
+    try:
+        user = request.user
+        if user.profile_photo:
+            if os.path.exists(user.profile_photo.path):
+                os.remove(user.profile_photo.path)
+
+        logout(request)
+        user.delete()
+        return JsonResponse({
+            'success': True,
+            'detail': 'Compte supprimé avec succès.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'detail': f'Erreur lors de la suppression: {str(e)}'
+        }, status=400)

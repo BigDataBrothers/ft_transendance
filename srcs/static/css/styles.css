@@ -1,4 +1,10 @@
 /* Variables globales pour les couleurs et les thèmes */
+html, body {
+    overflow: auto; /* Défilement uniquement si nécessaire */
+    height: 100%;   
+    margin: 0;      
+}
+
 :root {
     --primary-bg: #1b2838;
     --primary-text: #b8c2cc;
@@ -135,6 +141,51 @@ body::after {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+}
+
+/* Styles pour les cartes de jeu */
+.game-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.game-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+}
+
+.game-card .card-img-top {
+    height: 180px;
+    object-fit: cover;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+.game-card .card-body {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.game-card .btn-block {
+    background-color: var(--button-bg);
+    width: 100%;
+    margin-top: auto;
+    padding: 10px;
+    transition: all 0.3s ease;
+}
+
+.game-card .btn-block:hover {
+    background-color: var(--highlight-color);
+    transform: scale(1.05);
+}
+
+/* Assurer que les images de jeu ont toutes la même taille */
+.featured-games .card-img-top {
+    height: 180px;
+    object-fit: cover;
 }
 
 /* Styles pour le conteneur principal */
@@ -1600,15 +1651,33 @@ canvas {
 
 /* Statistiques */
 #gameStats {
+    display: none;
     position: absolute;
-    top: 70%;
-    left: 50%;
+    top: 15%;
+    left: 20%;
     transform: translateX(-50%);
     width: 90%;
     max-width: 400px;
     background: var(--friend-card-bg);
     padding: 15px;
     border-radius: 10px;
+    text-align: center;
+}
+
+/* Assurer un bon espacement avec le menu */
+#menu + #gameStats,
+#menuMode + #gameStats,
+#menuDifficulty + #gameStats {
+    margin-top: 30px;
+}
+
+
+#gameStats h2 {
+    color: var(--accent-color);
+    text-align: center;
+}
+
+#gameStats p {
     text-align: center;
 }
 
@@ -1665,11 +1734,23 @@ canvas {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
+.titlePong {
+	position: fixed;
+    top: 210px;
+    left: 820px;
+}
+
+.titleBomb {
+    position: fixed;
+    top: 210px;
+    left: 782px
+};
+
 /* Positionnement du bouton "Insert Coin" */
 .insertCoin,
 #menuLink {
     position: fixed;  /* Utiliser fixed pour un positionnement global */
-    bottom: 20px;
+    bottom: 350px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 900;  /* Juste en-dessous des menus */
@@ -1722,7 +1803,7 @@ canvas {
 #gameStats {
     position: fixed;
     bottom: 70px;  /* Position fixe depuis le bas */
-    left: 50%;
+    left: 350px;
     transform: translateX(-50%);
     width: 90%;
     max-width: 400px;

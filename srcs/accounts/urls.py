@@ -5,7 +5,7 @@ from django.conf.urls.static import static
 
 import accounts.views
 
-from . import views 
+from . import views
 
 app_name = 'accounts'
 
@@ -16,4 +16,5 @@ urlpatterns = [
     path('add_friend/<str:username>/', add_friend, name='add_friend'),
     path('remove_friend/<str:username>/', remove_friend, name='remove_friend'),
     path('get_notifications/', get_notifications, name='get_notifications'),
+    path('auth/delete_user/', views.delete_user, name='delete_user'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

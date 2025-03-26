@@ -14,6 +14,8 @@ from pathlib import Path
 
 import os
 
+# from decouple import config
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,9 +27,10 @@ print(f"TEMPLATES DIRS: {[BASE_DIR / 'templates']}")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # SECRET_KEY = os.environ.get('SECRET_KEY')
-SECRET_KEY = 'django-insecure-ge&!bzmr=3ows=fk$(m5o(iz1o*#$+$*81&ep99r!(1z=abbl^'
-FT_CLIENT_ID = 'u-s4t2ud-b855b6816874401e5044c60fa9f6f223acc039deaf9853f85d6a0a57679c7723'
-FT_CLIENT_SECRET = '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'
+
+SECRET_KEY = os.environ.get('SECRET_KEY')
+FT_CLIENT_ID = os.environ.get('FT_CLIENT_ID')
+FT_CLIENT_SECRET = os.environ.get('FT_CLIENT_SECRET')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
@@ -38,6 +41,11 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
+    'daphne',
+
+    'chat.apps.ChatConfig',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -130,7 +138,6 @@ USE_TZ = True
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATIC_URL = '/static/'
-
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
@@ -163,3 +170,16 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # APPEND_SLASH = False
+
+# Channels
+ASGI_APPLICATION = 'django_project.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
+
+# Ajoutez ces paramètres pour la sécurité
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
