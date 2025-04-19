@@ -17,7 +17,6 @@ class User(AbstractUser):
         upload_to='users/avatars/',
         blank=True,
         null=True,
-        default='users/avatars/default_avatar.jpg'
     )
     online = models.BooleanField(default=False)
     is_42_user = models.BooleanField(default=False)
@@ -63,20 +62,26 @@ def save_user_profile(sender, instance, **kwargs):
     instance.profile.save()
 
 class GameStatistics(models.Model):
+    DIFFICULTY_CHOICES = [
+        ('es', 'Easy'),
+        ('md', 'Medium'),
+        ('hd', 'Hard')
+    ]
     player = models.ForeignKey(User, on_delete=models.CASCADE)
-    date_played = models.DateTimeField(auto_now_add=True)
+    opponent = models.CharField(max_length=100, default='AI')  # Peut être "AI" ou un nom d'utilisateur
     player_score = models.IntegerField(default=0)
     computer_score = models.IntegerField(default=0)
-    DIFFICULTY_CHOICES = [
-        ('easy', 'Easy'),
-        ('medium', 'Medium'),
-        ('hard', 'Hard')
-    ]
-    difficulty = models.CharField(max_length=10, choices=DIFFICULTY_CHOICES, default='medium')
-    is_perfect_game = models.BooleanField(default=False)  # Victoire sans encaisser de point
-
+    difficulty = models.CharField(max_length=2, choices=DIFFICULTY_CHOICES, default='md')
+    duration = models.FloatField(default=0)  # Durée en secondes
+    is_perfect_game = models.BooleanField(default=False)
+    is_multiplayer = models.BooleanField(default=False)
+    date_played = models.DateTimeField(auto_now_add=True)
+    is_tournament_match = models.BooleanField(default=False)  # Nouveau champ
+    tournament_name = models.CharField(max_length=255, null=True, blank=True)  # Nouveau champ
+    tournament_round = models.IntegerField(null=True, blank=True)  # Nouveau champ
+    
     def __str__(self):
-        return f"{self.player.username} - {self.date_played.strftime('%Y-%m-%d %H:%M')}"
+        return f"{self.player.username} vs {self.opponent} - {self.date_played.strftime('%Y-%m-%d %H:%M')}"
 
     class Meta:
         ordering = ['-date_played']

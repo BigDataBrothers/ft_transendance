@@ -160,17 +160,6 @@ button:disabled {
 	margin: 5px 0;
 }
 
-/* Voir comment regler pb css*/
-/* #moreBubble button:hover, #moreBubble button:focus {
-	background-color: #fdd900;
-	animation: clignoteBackgroundButtonInf 0.8s infinite;
-}
-
-#closeBubble button:hover, #closeBubble button:focus {
-	background-color: #e74c3c;
-	animation: clignoteBackgroundButtonCl 0.8s infinite;
-} */
-
 #menuMode {
 	display: none;
 	font-size: 35px;
@@ -274,7 +263,6 @@ canvas {
 
 
 /* Animation uniquement sur le fond */
-/*Si pas trouver solution faire une fct par couleur*/
 @keyframes clignoteBackground {
   0%, 100% { background-color: inherit; }
 

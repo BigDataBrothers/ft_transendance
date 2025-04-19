@@ -47,6 +47,7 @@
         "start_color": "Couleur de départ :",
         "end_color": "Couleur de fin :",
         "apply": "Appliquer",
+        "last_games": "Dernières parties",
         "cancel": "Annuler",
         "change_profile": "Modifier le profil"
     },
@@ -83,5 +84,10 @@
     "first_name": "Prénom :",
     "last_name": "Nom :",
     "updated": "Mettre à jour" 
+  },
+  "languages": {
+    "english": "Anglais",
+    "french": "Français",
+    "spanish": "Espagnol"
   }
 }

@@ -1,31 +1,21 @@
-"""
-ASGI config for django_project project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
-"""
-
 import os
+import django
 
-from channels.auth import AuthMiddlewareStack
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.security.websocket import AllowedHostsOriginValidator
-
-from django.core.asgi import get_asgi_application
-
+# Configurez l'environnement Django AVANT d'importer quoi que ce soit d'autre
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
+django.setup()
 
-application = get_asgi_application()
+# Importez après avoir configuré l'environnement
+from django.core.asgi import get_asgi_application
+from channels.routing import ProtocolTypeRouter, URLRouter
+from channels.auth import AuthMiddlewareStack
+import chat.routing  # Importez vos configurations de routing WebSocket
 
-from chat import routing
-
-application = ProtocolTypeRouter(
-    {
-        "http": application,
-        "websocket": AllowedHostsOriginValidator(
-            AuthMiddlewareStack(URLRouter(routing.websocket_urlpatterns))
-        ),
-    }
-)
+application = ProtocolTypeRouter({
+    "http": get_asgi_application(),
+    "websocket": AuthMiddlewareStack(
+        URLRouter(
+            chat.routing.websocket_urlpatterns
+        )
+    ),
+})

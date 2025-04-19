@@ -7,7 +7,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y \
+RUN sed -i 's/deb.debian.org/ftp.fr.debian.org/g' /etc/apt/sources.list && \
+    apt-get update && apt-get install -y --fix-missing\
     postgresql-client \
     libpq-dev \
     build-essential \

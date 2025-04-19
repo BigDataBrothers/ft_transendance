@@ -48,6 +48,7 @@
         "end_color": "End Color:",
         "apply": "Apply",
         "cancel": "Cancel",
+        "last_games": "Last Games",
         "change_profile": "Change My profile"
     },
     "password_change": {
@@ -83,5 +84,10 @@
     "first_name": "First Name :",
     "last_name": "Last Name :",
     "updated": "Update" 
+  },
+  "languages": {
+    "english": "English",
+    "french": "French",
+    "spanish": "Spanish"
   }
 }

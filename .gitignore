@@ -1,2 +1,12 @@
-.venv
 .env
+srcs/certs/*.pem
+srcs/certs/*.key
+srcs/certs/*.crt
+srcs/certs/*.srl
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.cache/

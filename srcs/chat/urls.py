@@ -1,4 +1,3 @@
-# urls.py
 from django.urls import path
 from . import views
 
@@ -12,11 +11,12 @@ urlpatterns = [
     path('unblock_user/<int:user_id>/', views.unblock_user, name='unblock_user'),
     path('send_game_invite/<int:user_id>/', views.send_game_invite, name='send_game_invite'),
     path('profile/<int:user_id>/', views.view_profile, name='view_profile'),
-  
     path('game/start/<int:opponent_id>/', views.start_game, name='start_game'),
     path('accept_game_invite/<int:sender_id>/', views.accept_game_invite, name='accept_game_invite'),
     path('reject_game_invite/<int:sender_id>/', views.reject_game_invite, name='reject_game_invite'),
 
     # Nouvel endpoint API pour les utilisateurs
     path('api/users/', views.api_get_users, name='api_get_users'),
+    # Utilisez votre propre function chat_ping
+    path('api/chat/ping/', views.chat_ping, name='chat_ping'),
 ]

@@ -220,17 +220,8 @@ def view_profile(request, user_id):
 @login_required
 def start_game(request, opponent_id):
     opponent = get_object_or_404(User, id=opponent_id)
-    # Pour l'instant, redirigeons simplement vers la page d'accueil
-    # Vous pourrez plus tard rediriger vers la vraie page de jeu
     messages.success(request, f"Démarrage d'une partie contre {opponent.username}")
     return redirect('home')
-
-    # Quand vous aurez une page de jeu, vous pourrez utiliser :
-    # return render(request, 'game/game.html', {
-    #     'opponent': opponent,
-    # })
-
-
 
 @login_required
 def accept_game_invite(request, sender_id):
@@ -339,3 +330,6 @@ def api_get_users(request):
     }
     
     return JsonResponse(data)
+
+def chat_ping(request):
+    return JsonResponse({'status': 'ok'})

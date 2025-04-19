@@ -14,7 +14,8 @@ from pathlib import Path
 
 import os
 
-# from decouple import config
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,9 +26,6 @@ print(f"TEMPLATES DIRS: {[BASE_DIR / 'templates']}")
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = os.environ.get('SECRET_KEY')
-
 SECRET_KEY = os.environ.get('SECRET_KEY')
 FT_CLIENT_ID = os.environ.get('FT_CLIENT_ID')
 FT_CLIENT_SECRET = os.environ.get('FT_CLIENT_SECRET')
@@ -35,7 +33,7 @@ FT_CLIENT_SECRET = os.environ.get('FT_CLIENT_SECRET')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'web']
 
 
 # Application definition
@@ -54,6 +52,39 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
 ]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+        'channels': {  # Pour les logs spécifiques à Channels
+            'handlers': ['console'],
+            'level': 'DEBUG',  # Niveau DEBUG pour plus de détails
+            'propagate': False,
+        },
+        'chat': {  # Pour les logs de votre application chat
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -143,7 +174,7 @@ STATICFILES_DIRS = [
 ]
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'mediafiles')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -152,31 +183,40 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = "home"
 
+LOGIN_URL = "/login/"
+
 LOGOUT_REDIRECT_URL = "home"
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://localhost:8443",
+    "http://localhost:8080",
+]
 
 AUTH_USER_MODEL = 'accounts.User'
 
 # URL de redirection vers l'autorisation 42
 AUTHORIZE_URL = 'https://api.intra.42.fr/oauth/authorize'
 TOKEN_URL = 'https://api.intra.42.fr/oauth/token'
-FT_REDIRECT_URI = 'http://localhost:8000/callback'
+FT_REDIRECT_URI = 'https://localhost:8443/callback'
+FRONTEND_URL = 'https://localhost:8443'
+
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     # Ajoutez ici d'autres backends si nécessaire
 ]
 
-# APPEND_SLASH = False
-
 # Channels
 ASGI_APPLICATION = 'django_project.asgi.application'
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer'
-    }
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6380)],  # Utilisez le nom du service Docker
+        },
+    },
 }
 
 # Ajoutez ces paramètres pour la sécurité
@@ -184,4 +224,10 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
-FRONTEND_URL = 'http://localhost:8080'
+# Paramètres HTTPS
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000  # 1 an
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True

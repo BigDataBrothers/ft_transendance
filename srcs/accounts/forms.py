@@ -26,4 +26,4 @@ class UpdateUserForm(forms.ModelForm):
                 'label': 'Photo de profil',
 
             })
-        }# exclude = ('password',)
+        }

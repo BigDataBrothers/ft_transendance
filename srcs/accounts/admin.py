@@ -42,7 +42,6 @@ class ProfileAdmin(admin.ModelAdmin):
         return format_html('<a href="{}">Voir l\'utilisateur</a>', url)
     user_link.short_description = 'Utilisateur'
     
-    # Personnaliser l'affichage des réalisations
     filter_horizontal = ('achievements', 'friends')
 
 @admin.register(Achievement)
