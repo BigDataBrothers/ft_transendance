@@ -3,6 +3,11 @@ srcs/certs/*.pem
 srcs/certs/*.key
 srcs/certs/*.crt
 srcs/certs/*.srl
+*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
 .idea/
 .vscode/
 *.swp
@@ -10,3 +15,4 @@ srcs/certs/*.srl
 *~
 .DS_Store
 .cache/
+__pycache__/
