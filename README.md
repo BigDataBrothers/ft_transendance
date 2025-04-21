@@ -162,9 +162,9 @@ ft_transcendance est une application web développée dans le cadre du cursus 42
 ```bash
    cd srcs/scripts
    ./generate_certs.sh
-   cd ../..
+   cd ..
    # Vérifier que les certificats ont été créés
-   ls -la srcs/certs/
+   ls -la certs/
 ```
 
 4. Lancer les conteneurs Docker
