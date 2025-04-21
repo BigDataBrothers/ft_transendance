@@ -2,7 +2,7 @@
 
 [![École 42](https://img.shields.io/badge/École-42-0055FF.svg)](https://42.fr)
 [![Status](https://img.shields.io/badge/Status-Completed-green.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-green.svg)]()
+![License](https://img.shields.io/badge/License-42--School-lightblue)
 [![Docker](https://img.shields.io/badge/Docker-Conteneurisé-blue.svg)]()
 [![Django](https://img.shields.io/badge/Django-4.0-darkgreen.svg)]()
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue.svg)]()
@@ -242,7 +242,7 @@ sudo kill -9 [PID]
 - La communauté open-source pour les nombreuses ressources et inspirations
 
 ## 📝 Licence
-Ce projet a été réalisé dans le cadre du cursus de l'école 42 et est sous licence MIT.
+> ℹ️ Ce projet est réalisé dans le cadre du cursus de l'école 42. Il est soumis à ses politiques académiques et ne peut être utilisé à des fins commerciales ou éducatives sans autorisation.
 
 ---
 
