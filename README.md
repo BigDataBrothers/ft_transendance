@@ -75,30 +75,22 @@ ft_transcendance est une application web développée dans le cadre du cursus 42
 
 <details>
   <summary>📹 Démonstration du Chat</summary>
-  <video width="100%" controls>
-    <source src="srcs/screenshots/chat_demo.webm" type="video/webm">
-    Votre navigateur ne supporte pas la lecture de vidéos.
-  </video>
+  <img src="srcs/screenshots/chat_demo.gif" alt="Démonstration Chat" width="100%" />
   <p>Interface de chat en temps réel permettant des conversations privées et de groupe</p>
 </details>
 
 <details>
   <summary>📹 Démonstration de Pong</summary>
-  <video width="100%" controls>
-    <source src="srcs/screenshots/pong_demo.webm" type="video/webm">
-    Votre navigateur ne supporte pas la lecture de vidéos.
-  </video>
+  <img src="srcs/screenshots/pong_demo.gif" alt="Démonstration Pong" width="100%" />
   <p>Jeu de Pong multijoueur avec différents niveaux de difficulté et power-ups</p>
 </details>
 
 <details>
   <summary>📹 Démonstration de Bomberman</summary>
-  <video width="100%" controls>
-    <source src="srcs/screenshots/bomberman_demo.webm" type="video/webm">
-    Votre navigateur ne supporte pas la lecture de vidéos.
-  </video>
+  <img src="srcs/screenshots/bomberman_demo.gif" alt="Démonstration Bomberman" width="100%" />
   <p>Jeu Bomberman avec ses mécaniques classiques adaptées pour le web</p>
 </details>
+
 
 ## 🔧 Installation
 
