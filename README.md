@@ -203,8 +203,11 @@ ft_transcendance est une application web développée dans le cadre du cursus 42
 - Envoyez des messages privés à vos amis
 
 ## 👨‍💻 Équipe de développement
-- Mehdi Yassine - Chef de projet et architecte
-- [Ajoutez d'autres membres si nécessaire]
+- **Mehdi Yassine** - [GitHub](https://github.com/BigDataBrothers) – Chef de projet et architecte logiciel : responsable de la coordination globale du projet, de la conception de l’architecture technique et du suivi de son implémentation.
+
+- **Mourtada Ba** - [GitHub](https://github.com/mourtadaba) – Développeur fonctionnel : en charge de l’implémentation du système de messagerie instantanée ainsi que de la gestion des relations d’amitié entre utilisateurs.
+
+- **Mehdi Derkaoui** - [GitHub](https://github.com/Extrase) – Développeur front-end : responsable de l’intégration des jeux sur la plateforme et de la gestion de la traduction multilingue de l’interface utilisateur.
 
 ## 🔍 Défis et Apprentissages
 - Mise en place de communication en temps réel avec WebSockets
